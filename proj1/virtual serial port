@@ -1,0 +1,22 @@
+Solução 1 - Utilização de 1 máquina virtual (Recomendada)
+
+    Use uma máquina Linux (por exemplo Ubuntu). A máquina Linux pode ser uma máquina virtual
+    Use o comando "socat" para criar 2 portas série virtuais interligadas entre si.
+
+        sudo socat -d  -d  PTY,link=/dev/ttyS10,mode=777   PTY,link=/dev/ttyS11,mode=777
+
+e use as portas  ttyS10  e    ttyS11  .
+
+    Em terminais diferentes corra o emissor ligado a ttyS10 e  o recetor ligado a ttyS11
+    Em fases mais avançadas do trabalho poderá usar um programa simula o cabo série ligado e desligado
+
+
+Solução 2 - Utilização de 2 máquinas virtuais
+
+    Instalar programa de criação de máquinas virtuais (ex. VMware Player)
+    Usar 2 máquinas virtuais Linux
+    Permitir o uso de porta série
+    Interligar as portas série das 2 máquinas.
+    Para interligação das portas série em VMware ver exemplo em:
+        https://www.vmware.com/support/ws5/doc/ws_devices_serial_2vms.html
+
