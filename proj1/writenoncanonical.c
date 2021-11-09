@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <signal.h>
+#include <string.h>
 #include "statemachine.c"
 
 #define BAUDRATE B38400
@@ -15,22 +16,13 @@
 #define FALSE 0
 #define TRUE 1
 
-volatile int STOP=FALSE;
 
-
-int main(int argc, char** argv)
+int transmitter(char *port)
 {
   int fd,c, res;
   struct termios oldtio,newtio;
   char buf[255];
   int i, sum = 0, speed = 0;
-
-  if ( (argc < 2) ||
-  ((strcmp("/dev/ttyS10", argv[1])!=0) &&
-  (strcmp("/dev/ttyS11", argv[1])!=0) )) {
-  printf("Usage:\tnserial SerialPort\n\tex: nserial /dev/ttyS1\n");
-  exit(1);
-  }
 
 
   /*
@@ -39,8 +31,8 @@ int main(int argc, char** argv)
   */
 
 
-  fd = open(argv[1], O_RDWR | O_NOCTTY );
-  if (fd <0) {perror(argv[1]); exit(-1); }
+  fd = open(port, O_RDWR | O_NOCTTY );
+  if (fd <0) {perror(port); exit(-1); }
 
   if ( tcgetattr(fd,&oldtio) == -1) { /* save current port settings */
   perror("tcgetattr");
@@ -90,8 +82,10 @@ int main(int argc, char** argv)
   //re-send message if no confirmation
   for(int k = 0; k < 3; k++){
     res = write(fd,buf,5);
-    if(state_machine(fd, buf))
+    if(state_machine(fd, buf)){
+      printf("confirmation recieved\n");
       break;
+    }
   }
 
   //(void) signal(SIGALRM, atende);  

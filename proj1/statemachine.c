@@ -31,7 +31,7 @@ int state_machine(int fd, char *buf){
 
     while (STOP==FALSE) { /* loop for input */
         res = read(fd,&buf[state],1); /* returns after 1 char has been input */
-        printf("%d bytes read", res);
+        printf("%d bytes read\n", res);
         switch (state){
 
                 case START:
@@ -81,17 +81,14 @@ int state_machine(int fd, char *buf){
                 case C_RCV:
                     printf("buffer: %x state :%d\n",buf[state], state);
                     if( buf[3] == (buf[1] ^ buf[2]) ) {
-                        printf("aqui1");
                         state++;
                         continue;
                     }
                     else if(buf[3] == 0x7e){
-                        printf("aqui2");
                         state = FLAG_RCV;
                         buf[3] = 0;
                     }
                     else{
-                        printf("aqui3");
                         state = START;
                         buf[3] = 0;
                         buf[2] = 0;
