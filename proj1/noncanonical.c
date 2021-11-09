@@ -21,9 +21,9 @@
 
 
 
-int reciever(char *port)
+int reciever(char *port, int *fd)
 {
-	int fd,c, res;
+	int c, res;
 	struct termios oldtio,newtio;
 	char buf[255];
 
@@ -35,8 +35,9 @@ int reciever(char *port)
 	because we don't want to get killed if linenoise sends CTRL-C.
 	*/
 
-
-	fd = open(port, O_RDWR | O_NOCTTY );
+	//either send port or fd
+	if(fd == NULL)
+		fd = open(port, O_RDWR | O_NOCTTY );
 	if (fd <0) {perror(port); exit(-1); }
 
 	if ( tcgetattr(fd,&oldtio) == -1) { /* save current port settings */

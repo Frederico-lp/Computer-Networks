@@ -5,7 +5,7 @@ int llopen(char port,int flag) {
     if(TRANSMITTER)
         transmitter(port);
     else if(RECEIVER)
-        reciever(port);
+        reciever(port, NULL);
     else perror("invalid flag!\n");
 }
 
@@ -18,9 +18,10 @@ int llwrite(int fd, char * buffer, int length){
     buffer[2] = 0x03;
     buffer[3] = buffer[1] ^ buffer[2];
     //enviar dados
+    //APLICAÇAO
     //buf[4] = 0x7e;
 
-    reciever
+    reciever(0, fd);
 }
 
 
