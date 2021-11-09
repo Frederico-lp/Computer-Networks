@@ -5,6 +5,7 @@
 #include <fcntl.h>
 #include <termios.h>
 #include <stdio.h>
+#include <string.h>
 #include "statemachine.c"
 
 #define BAUDRATE B38400
@@ -19,20 +20,14 @@
 
 
 
-//volatile int STOP=FALSE;
 
-int main(int argc, char** argv)
+int reciever(char *port)
 {
 	int fd,c, res;
 	struct termios oldtio,newtio;
 	char buf[255];
 
-	if ( (argc < 2) ||
-	((strcmp("/dev/ttyS10", argv[1])!=0) &&	//0 e dps 1q estava
-	(strcmp("/dev/ttyS11", argv[1])!=0) )) {
-		printf("Usage:\tnserial SerialPort\n\tex: nserial /dev/ttyS1\n");
-		exit(1);
-	}
+	
 
 
 	/*
@@ -41,8 +36,8 @@ int main(int argc, char** argv)
 	*/
 
 
-	fd = open(argv[1], O_RDWR | O_NOCTTY );
-	if (fd <0) {perror(argv[1]); exit(-1); }
+	fd = open(port, O_RDWR | O_NOCTTY );
+	if (fd <0) {perror(port); exit(-1); }
 
 	if ( tcgetattr(fd,&oldtio) == -1) { /* save current port settings */
 		perror("tcgetattr");
@@ -79,8 +74,11 @@ int main(int argc, char** argv)
 	printf("New termios structure set\n");
 
 	//recieve msg
-	if(state_machine(fd, buf))	//confirm
+	if(state_machine(fd, buf)){	//confirm
+		buf[2] = 0x07;	//UA altera c
 		res = write(fd,buf,5);	
+		printf("confirmação enivada\n");
+	}
 
 
 	sleep(1);
