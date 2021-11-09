@@ -27,6 +27,7 @@ void answer()                   // atende alarme
 int state_machine(int fd, char *buf){
     (void) signal(SIGALRM, answer);
     int state = 0, res = 0;
+    alarm(3);
 
     while (STOP==FALSE) { /* loop for input */
         res = read(fd,&buf[state],1); /* returns after 1 char has been input */
@@ -116,4 +117,5 @@ int state_machine(int fd, char *buf){
             }
             
     }
+    return FALSE;
 }
