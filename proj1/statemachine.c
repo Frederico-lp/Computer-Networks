@@ -17,40 +17,27 @@
 
 volatile int STOP=FALSE;
 
-void answer()                   // atende alarme
-{
-	STOP=TRUE;
-}
 
 
-int state_machine(int fd, char *buf){
-    (void) signal(SIGALRM, answer);
-    int state = 0, res = 0;
-    alarm(3);
+int state_machine(char *buf, int *state){
 
-    while (STOP==FALSE) { /* loop for input */
-        res = read(fd,&buf[state],1); /* returns after 1 char has been input */
-        printf("%d bytes read\n", res);
-        switch (state){
+        switch (*state){
 
                 case START:
                     if(buf[0] == 0x7e){
-                        printf("buffer: %x state :%d\n",buf[state], state);
+                        printf("buffer: %x state :%d\n",buf[*state], state);
                         state++;
-                        continue;
                     }
                     break;
 
                 case FLAG_RCV:
-                    printf("buffer: %x state :%d\n",buf[state], state);
+                    printf("buffer: %x state :%d\n",buf[*state], state);
                     if(buf[1] == 0x03 || buf[1] == 0x01){
                         state++;
 
-                        continue;
                     }
                     else if(buf[1] == 0x7e){
                         //state = 1;
-                        continue;
                     }
                     else {
                         state = START;
@@ -59,11 +46,11 @@ int state_machine(int fd, char *buf){
                     break;
 
                 case A_RCV:
-                    printf("buffer: %x state :%d\n",buf[state], state);
-                    if(buf[2] == 0x03 || buf[2] == 0x07){
+                    printf("buffer: %x state :%d\n",buf[*state], state);
+                    if(buf[2] == 0x03 || buf[2] == 0x07 || buf[2] == 0x0b 
+                        || buf[2] == 0x05  || buf[2] == 0x01 ){ //different options for each signal
                         state++;
 
-                        continue;
                     }
                     else if(buf[2] == 0x7e){
                         state = FLAG_RCV;
@@ -78,10 +65,9 @@ int state_machine(int fd, char *buf){
 
 
                 case C_RCV:
-                    printf("buffer: %x state :%d\n",buf[state], state);
+                    printf("buffer: %x state :%d\n",buf[*state], state);
                     if( buf[3] == (buf[1] ^ buf[2]) ) {
                         state++;
-                        continue;
                     }
                     else if(buf[3] == 0x7e){
                         state = FLAG_RCV;
@@ -96,11 +82,9 @@ int state_machine(int fd, char *buf){
                     break;
             
                 case BCC_OK:
-                    printf("buffer: %x state :%d\n",buf[state], state);
+                    printf("buffer: %x state :%d\n",buf[*state], state);
                     if(buf[4] == 0x7e){
                         printf("FIM\n", state);
-                        res = write(fd, buf, strlen(buf) + 1);
-                        printf("%d bytes written\n", res);
                         return TRUE;
                     }
                     else{
@@ -112,6 +96,6 @@ int state_machine(int fd, char *buf){
                     }
             }
             
-    }
+    
     return FALSE;
 }

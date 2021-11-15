@@ -83,7 +83,7 @@ int transmitter(char *port)
   for(int k = 0; k < 3; k++){
     res = write(fd,buf,5);
     if(state_machine(fd, buf)){
-      printf("confirmation recieved\n");
+      printf("(write)state machine reached final state\n");
       break;
     }
   }
