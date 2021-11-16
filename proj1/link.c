@@ -7,6 +7,33 @@ void sig_handler(int signum){
   alarmFlag = 1;
 }
 
+void byte_stuffing(unsigned char *packet, unsigned char *stuffed_packet){
+    //fazer do bcc2 tb
+
+    for(int i = 0; i < sizeof(*packet);i++){
+        if(packet[i] == FLAG){
+            stuffed_packet[i] = 0x7d;
+            stuffed_packet[i+1] = 0x5d;
+            i++;
+        }
+        else if(packet[i] == ESCAPE_OCETET){
+            stuffed_packet[i] = 0x7d;
+            stuffed_packet[i+1] = 0x5d;
+            i++;
+        }
+        else stuffed_packet[i] = packet[i];
+    }
+
+}
+
+void byte_destuffing(unsigned char *packet, unsigned char *destuffed_packet){
+    for(int i = 0; i < sizeof(*packet); i++){
+
+    }
+}
+
+
+
 int su_frame_write(int fd, char a, char c) {
     unsigned char buf[5];
 
@@ -140,7 +167,7 @@ int iniciate_connection(char *port, int connection)
     
 }
 
-int terminate_connection(char *port, int *fd, int connection)
+int terminate_connection(int *fd, int connection)
 {
     char buf[5];
     int state = START;

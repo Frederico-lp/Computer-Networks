@@ -34,6 +34,7 @@
 #define TRANSMITTER 1
 #define RECEIVER 0
 
+#define ESCAPE_OCETET   0X7d
 
 #define MAX_SIZE 50
 
@@ -48,10 +49,14 @@ char frame[MAX_SIZE];          /*Trama*/
 
 linkLayer *linkL;   //tem de estar no .h para poder inicializar no main
 
+void byte_stuffing(unsigned char *packet, unsigned char *stuffed_packet);
+
+void byte_destuffing(unsigned char *packet, unsigned char *destuffed_packet);
+
 void sig_handler(int signum);
 
 int su_frame_write(int fd, char a, char c);
 
 int iniciate_connection(char *port, int connection);
 
-int terminate_connection(int fd, int connection);
+int terminate_connection(int *fd, int connection);

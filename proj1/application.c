@@ -33,28 +33,3 @@ int llclose(int fd){
 }
 
 
-
-void byte_stuffing(unsigned char *packet, unsigned char *stuffed_packet){
-
-    for(int i = 0; i < sizeof(*packet);i++){
-        if(packet[i] == FLAG){
-            stuffed_packet[i] = 0x7d;
-            stuffed_packet[i+1] = 0x5d;
-            i++;
-        }
-        else if(packet[i] == ESCAPE_OCETET){
-            stuffed_packet[i] = 0x7d;
-            stuffed_packet[i+1] = 0x5d;
-            i++;
-        }
-        else stuffed_packet[i] = packet[i];
-    }
-
-}
-
-void byte_destuffing(unsigned char *packet, unsigned char *destuffed_packet){
-    for(int i = 0; i < sizeof(*packet); i++){
-
-    }
-}
-
