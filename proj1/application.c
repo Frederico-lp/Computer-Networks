@@ -13,6 +13,8 @@ int llwrite(int fd, char * buffer, int length){
     buffer[1] = 0x03;
     buffer[2] = 0x03;
     buffer[3] = buffer[1] ^ buffer[2];
+
+    
     //enviar dados
     //APLICAÇAO
     //buf[4] = 0x7e;
@@ -33,3 +35,26 @@ int llclose(int fd){
 }
 
 
+void byte_stuffing(unsigned char *packet, unsigned char *stuffed_packet){
+
+    for(int i = 0; i < sizeof(*packet);i++){
+        if(packet[i] == FLAG){
+            stuffed_packet[i] = 0x7d;
+            stuffed_packet[i+1] = 0x5d;
+            i++;
+        }
+        else if(packet[i] == ESCAPE_OCTET){
+            stuffed_packet[i] = 0x7d;
+            stuffed_packet[i+1] = 0x5d;
+            i++;
+        }
+        else stuffed_packet[i] = packet[i];
+    }
+
+}
+
+void byte_destuffing(unsigned char *packet, unsigned char *destuffed_packet){
+    for(int i = 0; i < sizeof(*packet); i++){
+
+    }
+}

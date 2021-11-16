@@ -1,5 +1,6 @@
 #include "link.h"
 
+#define ESCAPE_OCTET   0X7d
 
 typedef struct {
 int fileDescriptor; /*Descritor correspondente à porta série*/
