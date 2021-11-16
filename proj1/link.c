@@ -1,19 +1,21 @@
 #include "link.h"
 
 int alarmFlag = 0;
+int alarmCount = 0;
+int sequenceNumber = 0;
 
 void sig_handler(int signum){
  
   alarmFlag = 1;
+  alarmCount++;
 }
 
 void byte_stuffing(unsigned char *packet, unsigned char *stuffed_packet){
-    //fazer do bcc2 tb
 
     for(int i = 0; i < sizeof(*packet);i++){
         if(packet[i] == FLAG){
             stuffed_packet[i] = 0x7d;
-            stuffed_packet[i+1] = 0x5d;
+            stuffed_packet[i+1] = 0x5e;
             i++;
         }
         else if(packet[i] == ESCAPE_OCETET){
@@ -46,11 +48,28 @@ int su_frame_write(int fd, char a, char c) {
     return write(fd, buf, 5);
 }
 
-int i_frame_write(int fd, char a, char c) {
-    unsigned char *buf;
-    buf[0] = FLAG; 
-    buf[1] = a;  
-    buf[2] = c;
+int i_frame_write(int fd, char a, char c, unsigned char *buffer, unsigned char **ret_buf) {
+    unsigned char *ret_buf;
+    ret_buf[0] = FLAG; 
+    ret_buf[1] = a;  
+    ret_buf[2] = c; //sequenxe nymber!!!
+    ret_buf[3] = a^c;
+    char bff2 = buffer[0];
+    int i = 0;
+    int j = 4;
+    //confirmar isto
+    while(buffer[i+1] != FLAG){
+        ret_buf[j] = buffer[i];       
+        bff2 = bff2^buffer[i+1];    //começa no buf[2]
+        i++;
+        j++;
+    }
+    ret_buf[j+1] = buffer[i];   //fica a faltar o ultimo byte antes
+    ret_buf[j+2] = bff2;
+    ret_buf[j+3] = FLAG;
+
+    linkL.sequenceNumber = linkL.sequenceNumber ^ 1;
+    return write(fd, ret_buf, j + 3);
 }
 
 int iniciate_connection(char *port, int connection)
@@ -112,10 +131,10 @@ int iniciate_connection(char *port, int connection)
         int flag = TRUE;
 
         //re-send message if no confirmation
-        for(int transmissions = 0; transmissions < 3; transmissions++){
+        while(alarmCount < linkL.numTransmissions){
             //esta a incrementar?
             if(flag){
-                alarm(linkL->timeout);
+                alarm(linkL.timeout);
                 flag = FALSE;
 
                 if(su_frame_write(fd, A_E, C_SET) < 0){
@@ -123,7 +142,7 @@ int iniciate_connection(char *port, int connection)
                     exit(-1);
                 }
             }
-
+            //rever
             if(read(fd, buf[state], 1) < 0){   //check if any byte of ua was recieved
                 if(alarmFlag){
                     perror("alarm timeout\n");
@@ -178,7 +197,7 @@ int terminate_connection(int *fd, int connection)
         for(int transmissions = 0; transmissions < 3; transmissions++){
             //esta a incrementar?
             if(flag){
-                alarm(linkL->timeout);
+                alarm(linkL.timeout);
                 flag = FALSE;
 
                 if(su_frame_write(fd, A_E, C_DISC) < 0){    //write
@@ -188,7 +207,7 @@ int terminate_connection(int *fd, int connection)
             }
 
             if(read(fd, buf[state], 1) < 0){   //read
-                if(alarmFlag){
+                if(alarmFlag && alarmCount == 3){
                     perror("alarm timeout\n");
                     exit(-1);
                 }

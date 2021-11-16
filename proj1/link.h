@@ -47,7 +47,7 @@ unsigned int numTransmissions; /*Número de tentativas em caso de falha*/
 char frame[MAX_SIZE];          /*Trama*/
 } linkLayer;
 
-linkLayer *linkL;   //tem de estar no .h para poder inicializar no main
+linkLayer linkL;
 
 void byte_stuffing(unsigned char *packet, unsigned char *stuffed_packet);
 
@@ -56,6 +56,8 @@ void byte_destuffing(unsigned char *packet, unsigned char *destuffed_packet);
 void sig_handler(int signum);
 
 int su_frame_write(int fd, char a, char c);
+
+int i_frame_write(int fd, char a, char c, unsigned char *buffer, unsigned char **ret_buf);
 
 int iniciate_connection(char *port, int connection);
 

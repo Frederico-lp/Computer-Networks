@@ -17,3 +17,5 @@ int llread(int fd, char * buffer);
 
 int llclose(int fd);
 
+void create_packet();
+

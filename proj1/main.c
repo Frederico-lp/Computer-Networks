@@ -4,6 +4,7 @@ int main()
 {
     appL = (applicationLayer *)malloc(sizeof(applicationLayer));
     
-    linkL = (linkLayer *)malloc(sizeof(linkLayer));
-    linkL->timeout = 20;
+    // linkL = (linkLayer *)malloc(sizeof(linkLayer));
+    linkL.timeout = 20;
+    linkL.sequenceNumber = 0;
 }
