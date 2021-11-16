@@ -18,7 +18,7 @@ void byte_stuffing(unsigned char *packet, unsigned char *stuffed_packet){
             stuffed_packet[i+1] = 0x5e;
             i++;
         }
-        else if(packet[i] == ESCAPE_OCETET){
+        else if(packet[i] == ESCAPE_OCTET){
             stuffed_packet[i] = 0x7d;
             stuffed_packet[i+1] = 0x5d;
             i++;
@@ -28,10 +28,30 @@ void byte_stuffing(unsigned char *packet, unsigned char *stuffed_packet){
 
 }
 
-void byte_destuffing(unsigned char *packet, unsigned char *destuffed_packet){
-    for(int i = 0; i < sizeof(*packet); i++){
+void byte_destuffing(unsigned char *packet){
 
+    unsigned char * msg = malloc(sizeof(*packet));
+    unsigned char * aux_msg = malloc(sizeof(*packet));
+
+    for(int i = 4; i < sizeof(*packet); i++){ //i=4 ignores the first 5 bytes that correspond to ESCAPE_OCTET, 0x5e, A_R, C, BCC1
+        if(packet[i] != ESCAPE_OCTET){
+            aux_msg[i] = packet[i];
+        }
+        if(packet[i] == ESCAPE_OCTET){
+            if(packet[i+1] == 0x5e){
+                aux_msg[i] = FLAG;
+            }
+        }
+        if(packet[i] == FLAG){
+            break;
+        }
     }
+
+    for(int i = 0; i < sizeof(*aux_msg) - 1; i++){
+        msg[i] = aux_msg[i];
+    }
+
+    return msg;
 }
 
 
