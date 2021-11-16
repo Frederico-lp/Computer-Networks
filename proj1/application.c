@@ -24,7 +24,17 @@ int llwrite(int fd, char * buffer, int length){
 
 
 int llread(int fd, char * buffer){
+
+    int length = sizeof(*buffer);
     
+    for (int i = 0; i < length; i++){
+        if(buffer[i] == FLAG){
+            //byte_destuffing()
+        }
+        
+    }
+
+    return 0;
 
 }
 
