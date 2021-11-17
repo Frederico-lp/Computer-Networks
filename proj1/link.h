@@ -49,7 +49,7 @@ char frame[MAX_SIZE];          /*Trama*/
 
 linkLayer linkL;
 
-void byte_stuffing(unsigned char *packet, unsigned char *stuffed_packet);
+void byte_stuffing(unsigned char *packet, unsigned char **stuffed_packet, int length){
 
 void byte_destuffing(unsigned char *packet);
 
@@ -57,7 +57,7 @@ void sig_handler(int signum);
 
 int su_frame_write(int fd, char a, char c);
 
-int i_frame_write(int fd, char a, char c, unsigned char *buffer, unsigned char **ret_buf);
+int i_frame_write(int fd, char a, int length, unsigned char *data, unsigned char **ret_buf);
 
 int iniciate_connection(char *port, int connection);
 

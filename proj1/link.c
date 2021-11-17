@@ -1,5 +1,7 @@
 #include "link.h"
 
+//NOTA: SUBSTITUIR EXIT(-1) POR BREAK
+
 int alarmFlag = 0;
 int alarmCount = 0;
 int sequenceNumber = 0;
@@ -10,20 +12,20 @@ void sig_handler(int signum){
   alarmCount++;
 }
 
-void byte_stuffing(unsigned char *packet, unsigned char *stuffed_packet){
+void byte_stuffing(unsigned char *packet, unsigned char **stuffed_packet, int length){
 
-    for(int i = 0; i < sizeof(*packet);i++){
+    for(int i = 0; i < length; i++){
         if(packet[i] == FLAG){
-            stuffed_packet[i] = 0x7d;
-            stuffed_packet[i+1] = 0x5e;
+            *stuffed_packet[i] = 0x7d;
+            *stuffed_packet[i+1] = 0x5e;
             i++;
         }
         else if(packet[i] == ESCAPE_OCTET){
-            stuffed_packet[i] = 0x7d;
-            stuffed_packet[i+1] = 0x5d;
+            *stuffed_packet[i] = 0x7d;
+            *stuffed_packet[i+1] = 0x5d;
             i++;
         }
-        else stuffed_packet[i] = packet[i];
+        else *stuffed_packet[i] = packet[i];
     }
 
 }
@@ -68,25 +70,70 @@ int su_frame_write(int fd, char a, char c) {
     return write(fd, buf, 5);
 }
 
-int i_frame_write(int fd, char a, char c, unsigned char *buffer, unsigned char **ret_buf) {
-    unsigned char *ret_buf;
+int i_frame_write(int fd, char a, int length, unsigned char *data, unsigned char **ret_buf) {
+    //bff2 before stuffing
+    unsigned char bcc2 = data[0];
+    for(int i = 1; i < length; i++){
+        bcc2 ^= data[i];
+    }
+
+    //byte stuffing
+    unsigned char *stuffed_data;
+    byte_stuffing(data, &stuffed_data, length);
+
+    //put stuffed data into frame
     ret_buf[0] = FLAG; 
     ret_buf[1] = a;  
-    ret_buf[2] = c; //sequenxe nymber!!!
-    ret_buf[3] = a^c;
-    char bff2 = buffer[0];
-    int i = 0;
+    ret_buf[2] = linkL.sequenceNumber; //sequenxe nymber!!!
+    ret_buf[3] = a^linkL.sequenceNumber;
     int j = 4;
-    //confirmar isto
-    while(buffer[i+1] != FLAG){
-        ret_buf[j] = buffer[i];       
-        bff2 = bff2^buffer[i+1];    //começa no buf[2]
-        i++;
-        j++;
+
+    for(int i = 0; i < length; i++, j++){
+        ret_buf[j] = data[i];          //começa no buf[2]
     }
-    ret_buf[j+1] = buffer[i];   //fica a faltar o ultimo byte antes
-    ret_buf[j+2] = bff2;
-    ret_buf[j+3] = FLAG;
+    ret_buf[j+1] = bcc2;
+    ret_buf[j+2] = FLAG;
+    
+    //write frame
+    int written_length = 0;
+    int state = START;
+    alarmCount = 0;
+    unsigned char buf[5];
+    int flag = TRUE;
+
+    while(alarmCount < linkL.numTransmissions){
+        if(flag){
+            alarm(linkL.timeout);
+            flag = FALSE;
+
+            if( (written_length = write(fd, ret_buf, j+2)) < 0){
+                perror("i message failed\n");
+            }
+        }
+
+            //rever
+        if(read(fd, buf[state], 1) < 0){   //check if any byte of ua was recieved
+            if(alarmFlag){
+                perror("alarm timeout\n");
+                break;
+            }
+                
+        }
+        else{
+            if(state_machine(buf, &state)){
+                alarm(0);   
+                printf("recieved UA\n");
+                break;
+            }
+            
+        }
+        
+        
+    }
+
+
+
+
 
     linkL.sequenceNumber = linkL.sequenceNumber ^ 1;
     return write(fd, ret_buf, j + 3);
@@ -97,6 +144,7 @@ int iniciate_connection(char *port, int connection)
     int fd,c, res;
     struct termios oldtio,newtio;
     char buf[5];
+    alarmCount = 0;
     int i, sum = 0, speed = 0;
 
     (void) signal(SIGALRM, sig_handler);    //Register signal handler
@@ -159,14 +207,14 @@ int iniciate_connection(char *port, int connection)
 
                 if(su_frame_write(fd, A_E, C_SET) < 0){
                     perror("set message failed\n");
-                    exit(-1);
+                    return(-1);
                 }
             }
             //rever
             if(read(fd, buf[state], 1) < 0){   //check if any byte of ua was recieved
                 if(alarmFlag){
                     perror("alarm timeout\n");
-                    exit(-1);
+                    return(-1);
                 }
                     
             }
@@ -174,7 +222,7 @@ int iniciate_connection(char *port, int connection)
                 if(state_machine(buf, &state)){
                     alarm(0);   
                     printf("recieved UA\n");
-                    break;
+                    return 1;
                 }
                 
             }
@@ -182,6 +230,7 @@ int iniciate_connection(char *port, int connection)
         }
 
         perror("Error establishing connection, too many attempts\n");
+        return -1;
     }
 
     else if(connection == RECEIVER){
@@ -209,6 +258,7 @@ int iniciate_connection(char *port, int connection)
 int terminate_connection(int *fd, int connection)
 {
     char buf[5];
+    alarmCount = 0;
     int state = START;
     if(connection == TRANSMITTER){
         int flag = TRUE;
@@ -229,7 +279,7 @@ int terminate_connection(int *fd, int connection)
             if(read(fd, buf[state], 1) < 0){   //read
                 if(alarmFlag && alarmCount == 3){
                     perror("alarm timeout\n");
-                    exit(-1);
+                    return(-1);
                 }
                     
             }
