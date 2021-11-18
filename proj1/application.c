@@ -63,10 +63,11 @@ int llread(int fd, char * buffer){
     unsigned char *msg = malloc(sizeof(*buffer)), byte_read;
     int flag = 0, CURRENT_STATE = START;
     
-    while(flag == 0){
+    while(state_machine(&byte_read, CURRENT_STATE)){
         read(fd, &byte_read, 1);
-        state_machine(&byte_read, CURRENT_STATE);
     }
+
+    //needs checking and confirmation
 
     return sizeof(*msg);
 }

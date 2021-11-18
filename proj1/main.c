@@ -38,7 +38,36 @@ int main(int argc, char** argv)
         if(strcmp(MODEMDEVICE_0, argv[i]) == 0 || strcmp(MODEMDEVICE_1, argv[i]) == 0){
             port = argv[i];
         }
+        else {
+			int accessableImg = access(argv[i], F_OK);
+			if (accessableImg == 0) {
+				img = argv[i];
+			} 
+            else {
+				printf("Invalid Usage:\tInvalid arguments\n");
+				exit(1);
+			}
+		}
     }
 
+    if(img == NULL){ // Open comunications for receiver
+        if(llopen(port, RECEIVER)){
 
+        }
+    }
+    else if(llopen(port, TRANSMITTER))
+
+    //consoante o path for null ou nao, abrir recetor ou transmissor respetivamente
+
+
+    /*
+    if (tcsetattr(fd, TCSANOW, &oldtio) == -1) {
+		perror("tcsetattr");
+		exit(-1);
+	}
+
+	close(fd);
+    */
+
+	return 0;
 }
