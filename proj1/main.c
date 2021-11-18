@@ -13,8 +13,8 @@ int main(int argc, char** argv)
 
     /*
     1ºcriar estrutuas de dados -> missing some?
-    2ºler os argumentos q lhe vamos passar
-    3ºabrir (llopen)
+    2ºler os argumentos q lhe vamos passar -> DONE
+    3ºabrir (llopen) -> TO_DO FROM THIS POINT DOWN
     4º
     SE FOR TRANSMITTER:
     -abrir ficheiro
