@@ -60,17 +60,15 @@ int llwrite(int fd, char *buffer, int length){
 
 int llread(int fd, char * buffer){
 
-    int length = sizeof(*buffer);
+    unsigned char *msg = malloc(sizeof(*buffer)), byte_read;
+    int flag = 0, CURRENT_STATE = START;
     
-    for (int i = 0; i < length; i++){
-        if(buffer[i] == FLAG){
-            //byte_destuffing()
-        }
-        
+    while(flag == 0){
+        read(fd, &byte_read, 1);
+        state_machine(&byte_read, CURRENT_STATE);
     }
 
-    return 0;
-
+    return sizeof(*msg);
 }
 
 

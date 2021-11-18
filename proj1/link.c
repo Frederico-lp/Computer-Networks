@@ -49,7 +49,7 @@ void byte_destuffing(unsigned char *packet){
         }
     }
 
-    for(int i = 0; i < sizeof(*aux_msg) - 1; i++){
+    for(int i = 0; i < sizeof(*aux_msg) - 1; i++){ //sizeof(*aux_msg) - 1 because bcc2
         msg[i] = aux_msg[i];
     }
 
