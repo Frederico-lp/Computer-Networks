@@ -10,8 +10,9 @@ int main(int argc, char** argv)
 
     char *port;
     char *img;
+    unsigned char * control;
 
-    int fd, res;
+    int fd, res, lenght;
     struct termios oldtio, newtio;
     char buf[255];
 
@@ -73,23 +74,41 @@ int main(int argc, char** argv)
 
                 }
             }
+            llclose(port);
+
+            if(assemble_pic(msg) != 0){
+                perror("Error on assembling picture\n");
+                exit(1);
+            }
         }
     }
     else if(llopen(port, TRANSMITTER)){ // Open comunications for transmitter
+        unsigned char * buffer = process_pic(img, &lenght);
+        if(lenght <= 5){ // demand at least a byte, the rest is the header
+            printf("Error processing image\n");
+            exit(1);
+        }
+        control[0] = 2; // C_BEGIN
+        control[1] = 0; // T_FILESIZE
+        control[2] = 1;
+        control[3] = lenght;
 
+        if(llwrite(fd, control, 4)){
+            if(llwrite(fd, buffer, lenght)){
+                control[0] = 3;
+                llwrite(fd, control, 4);
+            }
+        }
+
+        llclose(fd);
     } 
-
-    //consoante o path for null ou nao, abrir recetor ou transmissor respetivamente
     
-
-    /*
     if (tcsetattr(fd, TCSANOW, &oldtio) == -1) {
 		perror("tcsetattr");
 		exit(-1);
 	}
 
 	close(fd);
-    */
 
 	return 0;
 }
