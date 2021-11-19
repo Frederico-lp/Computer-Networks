@@ -61,6 +61,18 @@ int main(int argc, char** argv)
             unsigned char *msg_end;
 
             msg_start = llread(port, argv[1]); // TO-DO
+
+            if(msg_start[0] == REJ){
+                write(STDOUT_FILENO, "Received start\n", 25);
+                msg = llread(port, argv[1]);
+                if(msg[0] != ESCAPE_OCTET){
+                    msg_end = llread(port, argv[1]); // MISSING FLAG 2
+                    if(msg_end[0] == 2){
+                        write(STDOUT_FILENO, "Received end", 25);
+                    }
+
+                }
+            }
         }
     }
     else if(llopen(port, TRANSMITTER)){ // Open comunications for transmitter
@@ -80,4 +92,44 @@ int main(int argc, char** argv)
     */
 
 	return 0;
+}
+
+int assemble_pic(unsigned char * pic_buffer){
+    FILE * pic;
+    pic = fopen("penguin.gif", "wb+");
+
+    int picSize = pic_buffer[2]*255 + pic_buffer[3];
+    unsigned char * aux = malloc(picSize);
+
+    for(int i = 0; i < picSize; i++){
+        aux[i] = pic_buffer[i+4];
+    }
+
+    fwrite(aux, 1, picSize-1, pic);
+    fclose(pic);
+
+    return 0;
+}
+
+unsigned char * process_pic(char* path, int* size){
+    FILE *f = fopen(path, "rb");
+    fseek(f, 0, SEEK_END);
+    long int lenght = ftell(f);
+    unsigned char * control = (unsigned char*)malloc(lenght+4);
+    unsigned char *buffer = (unsigned char *)malloc(lenght);
+
+    fseek(f, 0, SEEK_SET);
+    fread(buffer, 1, lenght, f);
+    fclose(f);
+
+	control[0] = C_REJ;	// C
+	control[1] = 0; // N
+	control[2] = lenght / 255;	// L2
+	control[3] = lenght % 255; // L1
+
+	for (int i = 0; i < lenght; i++) {
+		control[i+4] = buffer[i];
+	}
+
+	return control;
 }
