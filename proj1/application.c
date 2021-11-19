@@ -186,7 +186,7 @@ int llopen(char* port, int flag){
 
         printf("New termios structure set\n");
 
-        UA = FALSE;
+        UA = FALSE; //NEEDS CHECKING
 
         do {
             write(fd, T_SET, 5);
@@ -199,7 +199,7 @@ int llopen(char* port, int flag){
                 CURRENT_STATE = statemachine(buffer, CURRENT_STATE);
             }
 
-        }while(alarmFlag && alarmCount < 3);
+        }while(alarmFlag && alarmCount < 3); // FROM THIS DOWN IS MISSING
 
     }
     else if (flag == RECEIVER){
