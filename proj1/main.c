@@ -88,6 +88,7 @@ int main(int argc, char** argv)
             printf("Error processing image\n");
             exit(1);
         }
+        //n sei se podes associar um int a um so elemento de um unsigned char*
         control[0] = 2; // C_BEGIN
         control[1] = 0; // T_FILESIZE
         control[2] = 1;
@@ -115,7 +116,7 @@ int main(int argc, char** argv)
 
 int assemble_pic(unsigned char * pic_buffer){
     FILE * pic;
-    pic = fopen("penguin.gif", "wb+");
+    pic = fopen("randomfile.txt", "wb+");
 
     int picSize = pic_buffer[2]*255 + pic_buffer[3];
     unsigned char * aux = malloc(picSize);

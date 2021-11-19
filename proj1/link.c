@@ -1,6 +1,8 @@
 #include "link.h"
 
-//NOTA: SUBSTITUIR EXIT(-1) POR BREAK
+
+//NOTA: adicionar variavel para while n continuar dps de chegar ao fim do state machine
+//Verificar o terminate connection, tem coisas mal
 
 int alarmFlag = 0;
 int alarmCount = 0;
@@ -145,6 +147,7 @@ int iniciate_connection(char *port, int connection)
     struct termios oldtio,newtio;
     char buf[5];
     alarmCount = 0;
+    alarmFlag = 0;
     int i, sum = 0, speed = 0;
 
     (void) signal(SIGALRM, sig_handler);    //Register signal handler
@@ -155,8 +158,7 @@ int iniciate_connection(char *port, int connection)
     because we don't want to get killed if linenoise sends CTRL-C.
     */
 
-    if(fd == NULL)
-        fd = open(port, O_RDWR | O_NOCTTY );
+    fd = open(port, O_RDWR | O_NOCTTY );
     if (fd <0) {perror(port); exit(-1); }
 
     if ( tcgetattr(fd,&oldtio) == -1) { /* save current port settings */
@@ -194,54 +196,40 @@ int iniciate_connection(char *port, int connection)
     printf("New termios structure set\n");
 
 
-    int state = START;
+    int *state = START;
     if(connection == TRANSMITTER){
         int flag = TRUE;
 
         //re-send message if no confirmation
-        while(alarmCount < linkL.numTransmissions){
-            //esta a incrementar?
-            if(flag){
-                alarm(linkL.timeout);
-                flag = FALSE;
+        do{
+            if(su_frame_write(fd, A_E, C_SET) < 0){
+                perror("set message failed\n");
+            }
+            alarm(linkL.timeout);
+            flag = FALSE;
+            while(alarmFlag && *state != BCC_OK ){
+                read(fd, buf[*state], 1);
+                state_machine(buf, &state);
+            }
+            
 
-                if(su_frame_write(fd, A_E, C_SET) < 0){
-                    perror("set message failed\n");
-                    return(-1);
-                }
-            }
-            //rever
-            if(read(fd, buf[state], 1) < 0){   //check if any byte of ua was recieved
-                if(alarmFlag){
-                    perror("alarm timeout\n");
-                    return(-1);
-                }
-                    
-            }
-            else{
-                if(state_machine(buf, &state)){
-                    alarm(0);   
-                    printf("recieved UA\n");
-                    return 1;
-                }
-                
-            }
-        
         }
+        while(!alarmFlag && alarmCount < linkL.numTransmissions);
 
-        perror("Error establishing connection, too many attempts\n");
-        return -1;
+        if(alarmCount == linkL.numTransmissions){
+            perror("Error establishing connection, too many attempts\n");
+            return -1;
+        }
+        else(printf("UA from SET message recieved\n"));
+
     }
 
     else if(connection == RECEIVER){
-        int full_message = FALSE;
-        while(!full_message){
-            if (read(fd, buf[state], 1) < 0) { // Receive SET message
+        while(*state != BCC_OK){
+            if (read(fd, buf[*state], 1) < 0) { // Receive SET message
                 perror("Failed to read SET message.");
-                exit(1);
             } else {
-                if(state_machine(buf, &state))
-                    full_message = TRUE;
+                state_machine(buf, &state);
             }
         }
         printf("UA recieved!\n");
@@ -259,57 +247,44 @@ int terminate_connection(int *fd, int connection)
 {
     char buf[5];
     alarmCount = 0;
-    int state = START;
+    alarmFlag = 0;
+    int *state = START;
     if(connection == TRANSMITTER){
         int flag = TRUE;
 
         //re-send message if no confirmation
-        for(int transmissions = 0; transmissions < 3; transmissions++){
-            //esta a incrementar?
-            if(flag){
-                alarm(linkL.timeout);
-                flag = FALSE;
+        //send and check if recieved DISC msg
+        do{
+            if(su_frame_write(fd, A_E, C_DISC) < 0){
+                perror("disc message failed\n");
+            }
+            alarm(linkL.timeout);
+            flag = FALSE;
+            while(alarmFlag && *state != BCC_OK ){
+                read(fd, buf[*state], 1);
+                state_machine(buf, &state);
+            }
+            
 
-                if(su_frame_write(fd, A_E, C_DISC) < 0){    //write
-                    perror("disc message failed\n");
-                    exit(-1);
-                }
-            }
-
-            if(read(fd, buf[state], 1) < 0){   //read
-                if(alarmFlag && alarmCount == 3){
-                    perror("alarm timeout\n");
-                    return(-1);
-                }
-                    
-            }
-            else{
-                if(state_machine(buf, &state)){ //if read all the bytes
-                    alarm(0);   
-                    printf("recieved disc\n");
-                    if(su_frame_write(fd, A_E, C_DISC) < 0){    //write
-                        perror("ua message failed\n");
-                        exit(-1);
-                    }
-                    break;
-                }
-                
-            }
-        
         }
+        while(!alarmFlag && alarmCount < linkL.numTransmissions);
 
-        perror("Error establishing connection, too many attempts\n");
+        if(alarmCount == linkL.numTransmissions){
+            perror("Error establishing connection, too many attempts\n");
+            return -1;
+        }
+        else{
+            printf("UA from SET message recieved\n");
+            su_frame_write(fd, A_E, C_UA)
+        }
     }
 
     else if(connection == RECEIVER){
-        int full_message = FALSE;
-        while(!full_message){
-            if (read(fd, buf[state], 1) < 0) { // Receive SET message
-                perror("Failed to read SET message.");
-                exit(1);
+        while(*state != BCC_OK){
+            if (read(fd, buf[*state], 1) < 0) { // Receive SET message
+                perror("Failed to read DISC message.");
             } else {
-                if(state_machine(buf, &state))
-                    full_message = TRUE;
+                state_machine(buf, &state);
             }
         }
         printf("DISC recieved!\n");
@@ -318,6 +293,7 @@ int terminate_connection(int *fd, int connection)
             perror("ua message failed\n");
             exit(-1);
         }
+        state = 
 
         full_message = FALSE;
         while(!full_message){
