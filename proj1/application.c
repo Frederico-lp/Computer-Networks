@@ -58,17 +58,74 @@ int llwrite(int fd, char *buffer, int length){
 }
 
 
-int llread(int fd, char * buffer){
+int llread(int fd, char * buffer, char * argv){
+
+    int fd, res;
+    struct termios oldtio, newtio;
+    char buf[255];
+
+    /*
+        Open serial port device for reading and writing and not as controlling tty
+        because we don't want to get killed if linenoise sends CTRL-C.
+    */
+
+
+
+    bzero(&newtio, sizeof(newtio));
+    newtio.c_cflag = BAUDRATE | CS8 | CLOCAL | CREAD;
+    newtio.c_iflag = IGNPAR;
+    newtio.c_oflag = 0;
+
+    /* set input mode (non-canonical, no echo,...) */
+    newtio.c_lflag = 0;
+
+    newtio.c_cc[VTIME] = 0; /* inter-character timer unused */
+    newtio.c_cc[VMIN] = 5;  /* blocking read until 5 chars received */
+
+    /* 
+        VTIME e VMIN devem ser alterados de forma a proteger com um temporizador a 
+        leitura do(s) pr�ximo(s) caracter(es)
+    */
+
+    tcflush(fd, TCIOFLUSH);
+
+    if (tcsetattr(fd, TCSANOW, &newtio) == -1)
+    {
+        perror("tcsetattr");
+        exit(-1);
+    }
+
+    printf("New termios structure set\n");
+
+
+    /* 
+        O ciclo WHILE deve ser alterado de modo a respeitar o indicado no gui�o 
+    */
+    while (STOP == FALSE)
+    {                           /* loop for input */
+        res = read(fd, buf, 255); /* returns after 5 chars have been input */
+        buf[res] = 0;             /* so we can printf... */
+        printf(":%s:%d\n", buf, res);
+        if (buf[0] == 'z')
+        STOP = TRUE;
+    }
+
+    tcsetattr(fd, TCSANOW, &oldtio);
+    close(fd);
+    return 0;
 
     unsigned char *msg = malloc(sizeof(*buffer)), byte_read;
     int flag = 0, CURRENT_STATE = START;
     
     while(state_machine(&byte_read, CURRENT_STATE)){
+
+
+
         read(fd, &byte_read, 1);
     }
 
     //needs checking and confirmation
-
+    
     return sizeof(*msg);
 }
 
@@ -78,3 +135,76 @@ int llclose(int fd){
     return terminate_connection(fd, appL->status);
 }
 
+/*---------------------------------------------------------*/
+
+int llopen(char* port, int flag){
+
+    fd = open(port, O_RDWR | O_NOCTTY);
+    unsigned char buffer;
+    int CURRENT_STATE = START;
+    if (fd < 0)
+    {
+        perror(port);
+        exit(-1);
+    }
+
+    if(flag == TRANSMITTER){
+        T_SET[0] = FLAG;
+        T_SET[1] = A_R;
+        T_SET[2] = C_SET;
+        T_SET[3] = A_R ^ C_SET;
+        T_SET[4] = FLAG;
+
+        if (tcgetattr(fd, &oldtio) == -1){ /* save current port settings */
+            perror("tcgetattr");
+            exit(-1);
+        }
+
+        bzero(&newtio, sizeof(newtio));
+        newtio.c_cflag = BAUDRATE | CS8 | CLOCAL | CREAD;
+        newtio.c_iflag = IGNPAR;
+        newtio.c_oflag = 0;
+
+        /* set input mode (non-canonical, no echo,...) */
+        newtio.c_lflag = 0;
+
+        newtio.c_cc[VTIME] = 0; /* inter-character timer unused */
+        newtio.c_cc[VMIN] = 5;  /* blocking read until 5 chars received */
+
+        /* 
+            VTIME e VMIN devem ser alterados de forma a proteger com um temporizador a 
+            leitura do(s) proximo(s) caracter(es)
+        */
+
+        tcflush(fd, TCIOFLUSH);
+
+        if (tcsetattr(fd, TCSANOW, &newtio) == -1)
+        {
+            perror("tcsetattr");
+            exit(-1);
+        }
+
+        printf("New termios structure set\n");
+
+        UA = FALSE;
+
+        do {
+            write(fd, T_SET, 5);
+            alarm(5);
+            sig_handler(0);
+            write(STDOUT_FILENO, "T_SET SENT\n", 24);
+
+            while(!UA && !alarmFlag){
+                read(fd, &buffer, 1);
+                CURRENT_STATE = statemachine(buffer, CURRENT_STATE);
+            }
+
+        }while(alarmFlag && alarmCount < 3);
+
+    }
+    else if (flag == RECEIVER){
+
+    }
+
+
+}

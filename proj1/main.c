@@ -11,6 +11,10 @@ int main(int argc, char** argv)
     char *port;
     char *img;
 
+    int fd, res;
+    struct termios oldtio, newtio;
+    char buf[255];
+
     /*
     1ºcriar estrutuas de dados -> missing some?
     2ºler os argumentos q lhe vamos passar -> DONE
@@ -52,13 +56,19 @@ int main(int argc, char** argv)
 
     if(img == NULL){ // Open comunications for receiver
         if(llopen(port, RECEIVER)){
+            unsigned char *msg;
+            unsigned char *msg_start;
+            unsigned char *msg_end;
 
+            msg_start = llread(port, argv[1]); // TO-DO
         }
     }
-    else if(llopen(port, TRANSMITTER))
+    else if(llopen(port, TRANSMITTER)){ // Open comunications for transmitter
+
+    } 
 
     //consoante o path for null ou nao, abrir recetor ou transmissor respetivamente
-
+    
 
     /*
     if (tcsetattr(fd, TCSANOW, &oldtio) == -1) {
