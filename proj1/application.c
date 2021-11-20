@@ -46,23 +46,27 @@ int create_data_packet(size_t c, unsigned char *data, int data_size, char**packe
     return packet_size;
 }
 
-int llopen(char port,int flag) {
-    appL->fileDescriptor = iniciate_connection(port, flag);
-    appL->status = flag;
+int llopen(char *port,int flag) {
+    appL.fileDescriptor = iniciate_connection(port, flag);
+    appL.status = flag;
+    return appL.fileDescriptor;
 }
 
 
 int llwrite(int fd, char *buffer, int length){
     //1º preparar buffer
-    return i_frame_write(fd, A_E, length, *buffer);
+    unsigned char **ret_buf;
+    //fazer malloc
+    return i_frame_write(fd, A_E, length, buffer, ret_buf);
 }
 
 
 int llread(int fd, char * buffer, char * argv){
 
-    int fd, res;
+    int res;
     struct termios oldtio, newtio;
     char buf[255];
+    int stop;
 
     /*
         Open serial port device for reading and writing and not as controlling tty
@@ -101,13 +105,13 @@ int llread(int fd, char * buffer, char * argv){
     /* 
         O ciclo WHILE deve ser alterado de modo a respeitar o indicado no gui�o 
     */
-    while (STOP == FALSE)
+    while (stop == FALSE)
     {                           /* loop for input */
         res = read(fd, buf, 255); /* returns after 5 chars have been input */
         buf[res] = 0;             /* so we can printf... */
         printf(":%s:%d\n", buf, res);
         if (buf[0] == 'z')
-        STOP = TRUE;
+        stop = TRUE;
     }
 
     tcsetattr(fd, TCSANOW, &oldtio);
@@ -117,7 +121,9 @@ int llread(int fd, char * buffer, char * argv){
     unsigned char *msg = malloc(sizeof(*buffer)), byte_read;
     int flag = 0, CURRENT_STATE = START;
     
-    while(state_machine(&byte_read, CURRENT_STATE)){
+    //while(state_machine(&byte_read, CURRENT_STATE)){
+    while(!state_machine(byte_read, &CURRENT_STATE)){
+
 
 
 
@@ -132,11 +138,12 @@ int llread(int fd, char * buffer, char * argv){
 
 
 int llclose(int fd){
-    return terminate_connection(fd, appL->status);
+    return terminate_connection(&fd, appL.status);
 }
 
 /*---------------------------------------------------------*/
 
+    /*
 int llopen(char* port, int flag){
 
     fd = open(port, O_RDWR | O_NOCTTY);
@@ -155,7 +162,7 @@ int llopen(char* port, int flag){
         T_SET[3] = A_R ^ C_SET;
         T_SET[4] = FLAG;
 
-        if (tcgetattr(fd, &oldtio) == -1){ /* save current port settings */
+        if (tcgetattr(fd, &oldtio) == -1){ 
             perror("tcgetattr");
             exit(-1);
         }
@@ -165,17 +172,11 @@ int llopen(char* port, int flag){
         newtio.c_iflag = IGNPAR;
         newtio.c_oflag = 0;
 
-        /* set input mode (non-canonical, no echo,...) */
+
         newtio.c_lflag = 0;
 
-        newtio.c_cc[VTIME] = 0; /* inter-character timer unused */
-        newtio.c_cc[VMIN] = 5;  /* blocking read until 5 chars received */
-
-        /* 
-            VTIME e VMIN devem ser alterados de forma a proteger com um temporizador a 
-            leitura do(s) proximo(s) caracter(es)
-        */
-
+        newtio.c_cc[VTIME] = 0; 
+        newtio.c_cc[VMIN] = 5;  
         tcflush(fd, TCIOFLUSH);
 
         if (tcsetattr(fd, TCSANOW, &newtio) == -1)
@@ -208,3 +209,4 @@ int llopen(char* port, int flag){
 
 
 }
+    */

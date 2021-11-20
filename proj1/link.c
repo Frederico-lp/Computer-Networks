@@ -32,7 +32,7 @@ void byte_stuffing(unsigned char *packet, unsigned char **stuffed_packet, int le
 
 }
 
-void byte_destuffing(unsigned char *packet){
+unsigned char* byte_destuffing(unsigned char *packet){
 
     unsigned char * msg = malloc(sizeof(*packet));
     unsigned char * aux_msg = malloc(sizeof(*packet));
@@ -84,17 +84,17 @@ int i_frame_write(int fd, char a, int length, unsigned char *data, unsigned char
     byte_stuffing(data, &stuffed_data, length);
 
     //put stuffed data into frame
-    ret_buf[0] = FLAG; 
-    ret_buf[1] = a;  
-    ret_buf[2] = linkL.sequenceNumber; //sequenxe nymber!!!
-    ret_buf[3] = a^linkL.sequenceNumber;
+    *ret_buf[0] = FLAG; 
+    *ret_buf[1] = a;  
+    *ret_buf[2] = linkL.sequenceNumber; //sequenxe nymber!!!
+    *ret_buf[3] = a^linkL.sequenceNumber;
     int j = 4;
 
     for(int i = 0; i < length; i++, j++){
-        ret_buf[j] = data[i];          //começa no buf[2]
+        *ret_buf[j] = data[i];          //começa no buf[2]
     }
-    ret_buf[j+1] = bcc2;
-    ret_buf[j+2] = FLAG;
+    *ret_buf[j+1] = bcc2;
+    *ret_buf[j+2] = FLAG;
     
     //write frame
     int written_length = 0;
@@ -113,8 +113,7 @@ int i_frame_write(int fd, char a, int length, unsigned char *data, unsigned char
             }
         }
 
-            //rever
-        if(read(fd, buf[state], 1) < 0){   //check if any byte of ua was recieved
+        if(read(fd, &buf[state], 1) < 0){   //check if any byte of ua was recieved
             if(alarmFlag){
                 perror("alarm timeout\n");
                 break;
@@ -122,7 +121,7 @@ int i_frame_write(int fd, char a, int length, unsigned char *data, unsigned char
                 
         }
         else{
-            if(state_machine(buf, &state)){
+            if(state_machine(buf[state], &state)){
                 alarm(0);   
                 printf("recieved UA\n");
                 break;
@@ -196,7 +195,7 @@ int iniciate_connection(char *port, int connection)
     printf("New termios structure set\n");
 
 
-    int *state = START;
+    int state = START;
     if(connection == TRANSMITTER){
         int flag = TRUE;
 
@@ -207,10 +206,12 @@ int iniciate_connection(char *port, int connection)
             }
             alarm(linkL.timeout);
             flag = FALSE;
-            while(alarmFlag && *state != BCC_OK ){
-                read(fd, buf[*state], 1);
-                state_machine(buf, &state);
+            while(alarmFlag && state != BCC_OK ){
+                read(fd, &buf[state], 1);
+                state_machine(buf[state], &state);
             }
+            if(state == BCC_OK)
+                break;
             
 
         }
@@ -225,11 +226,11 @@ int iniciate_connection(char *port, int connection)
     }
 
     else if(connection == RECEIVER){
-        while(*state != BCC_OK){
-            if (read(fd, buf[*state], 1) < 0) { // Receive SET message
+        while(state != BCC_OK){
+            if (read(fd, &buf[state], 1) < 0) { // Receive SET message
                 perror("Failed to read SET message.");
             } else {
-                state_machine(buf, &state);
+                state_machine(buf[state], &state);
             }
         }
         printf("UA recieved!\n");
@@ -237,7 +238,7 @@ int iniciate_connection(char *port, int connection)
     }
     else {
         printf("invalid type of connection!\n");
-        exit(-1);
+        return -1;
     }
     return fd;
     
@@ -248,22 +249,24 @@ int terminate_connection(int *fd, int connection)
     char buf[5];
     alarmCount = 0;
     alarmFlag = 0;
-    int *state = START;
+    int state = START;
     if(connection == TRANSMITTER){
         int flag = TRUE;
 
         //re-send message if no confirmation
         //send and check if recieved DISC msg
         do{
-            if(su_frame_write(fd, A_E, C_DISC) < 0){
+            if(su_frame_write(*fd, A_E, C_DISC) < 0){
                 perror("disc message failed\n");
             }
             alarm(linkL.timeout);
             flag = FALSE;
-            while(alarmFlag && *state != BCC_OK ){
-                read(fd, buf[*state], 1);
-                state_machine(buf, &state);
+            while(alarmFlag && state != BCC_OK ){
+                read(*fd, &buf[state], 1);
+                state_machine(buf[state], &state);
             }
+            if(state == BCC_OK)
+                break;
             
 
         }
@@ -275,34 +278,31 @@ int terminate_connection(int *fd, int connection)
         }
         else{
             printf("UA from SET message recieved\n");
-            su_frame_write(fd, A_E, C_UA)
+            su_frame_write(*fd, A_E, C_UA);
         }
     }
 
     else if(connection == RECEIVER){
-        while(*state != BCC_OK){
-            if (read(fd, buf[*state], 1) < 0) { // Receive SET message
+        while(state != BCC_OK){
+            if (read(*fd, &buf[state], 1) < 0) { // Receive SET message
                 perror("Failed to read DISC message.");
             } else {
-                state_machine(buf, &state);
+                state_machine(buf[state], &state);
             }
         }
         printf("DISC recieved!\n");
 
-        if(su_frame_write(fd, A_E, C_DISC) < 0){    //write
+        if(su_frame_write(*fd, A_E, C_DISC) < 0){    //write
             perror("ua message failed\n");
-            exit(-1);
+            return -1;
         }
-        state = 
 
-        full_message = FALSE;
-        while(!full_message){
-            if (read(fd, buf[state], 1) < 0) { // Receive UA message
+        state = START;
+        while(state != BCC_OK){
+            if (read(*fd, &buf[state], 1) < 0) { // Receive UA message
                 perror("Failed to read SET message.");
-                exit(1);
             } else {
-                if(state_machine(buf, &state))
-                    full_message = TRUE;
+                state_machine(buf[state], &state);
             }
         }
         printf("UA recieved!\n");
@@ -310,7 +310,7 @@ int terminate_connection(int *fd, int connection)
     }
     else {
         printf("invalid type of connection!\n");
-        exit(-1);
+        return -1;
     }
 
     return 1;

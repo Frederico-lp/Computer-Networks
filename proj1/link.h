@@ -3,10 +3,11 @@
 #include <fcntl.h>
 #include <termios.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <unistd.h>
 #include <signal.h>
 #include <string.h>
-#include "statemachine.c"
+#include "statemachine.h"
 
 
 #define BAUDRATE B38400
@@ -50,9 +51,9 @@ char frame[MAX_SIZE];          /*Trama*/
 
 linkLayer linkL;
 
-void byte_stuffing(unsigned char *packet, unsigned char **stuffed_packet, int length){
+void byte_stuffing(unsigned char *packet, unsigned char **stuffed_packet, int length);
 
-void byte_destuffing(unsigned char *packet);
+unsigned char* byte_destuffing(unsigned char *packet);
 
 void sig_handler(int signum);
 

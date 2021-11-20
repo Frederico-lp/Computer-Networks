@@ -1,8 +1,31 @@
 #include "application.h"
 
+unsigned char * process_pic(char* path, int* size){
+    FILE *f = fopen(path, "rb");
+    fseek(f, 0, SEEK_END);
+    long int lenght = ftell(f);
+    unsigned char * control = (unsigned char*)malloc(lenght+4);
+    unsigned char *buffer = (unsigned char *)malloc(lenght);
+
+    fseek(f, 0, SEEK_SET);
+    fread(buffer, 1, lenght, f);
+    fclose(f);
+
+	control[0] = C_REJ;	// C
+	control[1] = 0; // N
+	control[2] = lenght / 255;	// L2
+	control[3] = lenght % 255; // L1
+
+	for (int i = 0; i < lenght; i++) {
+		control[i+4] = buffer[i];
+	}
+
+	return control;
+}
+
 int main(int argc, char** argv)
 {
-    appL = (applicationLayer *)malloc(sizeof(applicationLayer));
+    //appL = (applicationLayer *)malloc(sizeof(applicationLayer));
     
     // linkL = (linkLayer *)malloc(sizeof(linkLayer));
     linkL.timeout = 20;
@@ -56,25 +79,25 @@ int main(int argc, char** argv)
     }
 
     if(img == NULL){ // Open comunications for receiver
-        if(llopen(port, RECEIVER)){
+        if((fd = llopen(port, RECEIVER))){
             unsigned char *msg;
             unsigned char *msg_start;
             unsigned char *msg_end;
 
-            msg_start = llread(port, argv[1]); // TO-DO
+            msg_start = llread(fd, port, argv[1]); // TO-DO
 
             if(msg_start[0] == REJ){
                 write(STDOUT_FILENO, "Received start\n", 25);
-                msg = llread(port, argv[1]);
+                msg = llread(fd, port, argv[1]);
                 if(msg[0] != ESCAPE_OCTET){
-                    msg_end = llread(port, argv[1]); // MISSING FLAG 2
+                    msg_end = llread(fd, port, argv[1]); // MISSING FLAG 2
                     if(msg_end[0] == 2){
                         write(STDOUT_FILENO, "Received end", 25);
                     }
 
                 }
             }
-            llclose(port);
+            llclose(*port);
 
             if(assemble_pic(msg) != 0){
                 perror("Error on assembling picture\n");
@@ -129,27 +152,4 @@ int assemble_pic(unsigned char * pic_buffer){
     fclose(pic);
 
     return 0;
-}
-
-unsigned char * process_pic(char* path, int* size){
-    FILE *f = fopen(path, "rb");
-    fseek(f, 0, SEEK_END);
-    long int lenght = ftell(f);
-    unsigned char * control = (unsigned char*)malloc(lenght+4);
-    unsigned char *buffer = (unsigned char *)malloc(lenght);
-
-    fseek(f, 0, SEEK_SET);
-    fread(buffer, 1, lenght, f);
-    fclose(f);
-
-	control[0] = C_REJ;	// C
-	control[1] = 0; // N
-	control[2] = lenght / 255;	// L2
-	control[3] = lenght % 255; // L1
-
-	for (int i = 0; i < lenght; i++) {
-		control[i+4] = buffer[i];
-	}
-
-	return control;
 }
