@@ -61,61 +61,37 @@ int llwrite(int fd, char *buffer, int length){
 }
 
 
+
+unsigned char* llread(int fd){
+    return read_i_frame(fd);
+}
+
+
+
+int llclose(int fd){
+    return terminate_connection(&fd, appL.status);
+}
+
+
+
+    /*
 int llread(int fd, char * buffer, char * argv){
 
     int res;
-    struct termios oldtio, newtio;
     char buf[255];
     int stop;
 
-    /*
-        Open serial port device for reading and writing and not as controlling tty
-        because we don't want to get killed if linenoise sends CTRL-C.
-    */
-
-
-
-    bzero(&newtio, sizeof(newtio));
-    newtio.c_cflag = BAUDRATE | CS8 | CLOCAL | CREAD;
-    newtio.c_iflag = IGNPAR;
-    newtio.c_oflag = 0;
-
-    /* set input mode (non-canonical, no echo,...) */
-    newtio.c_lflag = 0;
-
-    newtio.c_cc[VTIME] = 0; /* inter-character timer unused */
-    newtio.c_cc[VMIN] = 5;  /* blocking read until 5 chars received */
-
-    /* 
-        VTIME e VMIN devem ser alterados de forma a proteger com um temporizador a 
-        leitura do(s) pr�ximo(s) caracter(es)
-    */
-
-    tcflush(fd, TCIOFLUSH);
-
-    if (tcsetattr(fd, TCSANOW, &newtio) == -1)
-    {
-        perror("tcsetattr");
-        exit(-1);
-    }
-
-    printf("New termios structure set\n");
-
-
-    /* 
-        O ciclo WHILE deve ser alterado de modo a respeitar o indicado no gui�o 
-    */
+     
+    //    O ciclo WHILE deve ser alterado de modo a respeitar o indicado no gui�o 
+    
     while (stop == FALSE)
-    {                           /* loop for input */
-        res = read(fd, buf, 5); /* returns after 5 chars have been input */
-        buf[res] = 0;             /* so we can printf... */
+    {                           
+        res = read(fd, buf, 5);
+        buf[res] = 0;            
         printf(":%s:%d\n", buf, res);
         if (buf[0] == 'z') stop = TRUE;
     }
 
-    tcsetattr(fd, TCSANOW, &oldtio);
-    close(fd);
-    return 0;
 
     unsigned char *msg = malloc(sizeof(*buffer)), bytes_read;
     int flag = 0, CURRENT_STATE = START;
@@ -128,80 +104,5 @@ int llread(int fd, char * buffer, char * argv){
     //needs checking and confirmation
     
     return sizeof(*msg);
-}
-
-
-
-int llclose(int fd){
-    return terminate_connection(&fd, appL.status);
-}
-
-/*---------------------------------------------------------*/
-
-    /*
-int llopen(char* port, int flag){
-
-    fd = open(port, O_RDWR | O_NOCTTY);
-    unsigned char buffer;
-    int CURRENT_STATE = START;
-    if (fd < 0)
-    {
-        perror(port);
-        exit(-1);
-    }
-
-    if(flag == TRANSMITTER){
-        T_SET[0] = FLAG;
-        T_SET[1] = A_R;
-        T_SET[2] = C_SET;
-        T_SET[3] = A_R ^ C_SET;
-        T_SET[4] = FLAG;
-
-        if (tcgetattr(fd, &oldtio) == -1){ 
-            perror("tcgetattr");
-            exit(-1);
-        }
-
-        bzero(&newtio, sizeof(newtio));
-        newtio.c_cflag = BAUDRATE | CS8 | CLOCAL | CREAD;
-        newtio.c_iflag = IGNPAR;
-        newtio.c_oflag = 0;
-
-
-        newtio.c_lflag = 0;
-
-        newtio.c_cc[VTIME] = 0; 
-        newtio.c_cc[VMIN] = 5;  
-        tcflush(fd, TCIOFLUSH);
-
-        if (tcsetattr(fd, TCSANOW, &newtio) == -1)
-        {
-            perror("tcsetattr");
-            exit(-1);
-        }
-
-        printf("New termios structure set\n");
-
-        UA = FALSE; //NEEDS CHECKING
-
-        do {
-            write(fd, T_SET, 5);
-            alarm(5);
-            sig_handler(0);
-            write(STDOUT_FILENO, "T_SET SENT\n", 24);
-
-            while(!UA && !alarmFlag){
-                read(fd, &buffer, 1);
-                CURRENT_STATE = statemachine(buffer, CURRENT_STATE);
-            }
-
-        }while(alarmFlag && alarmCount < 3); // FROM THIS DOWN IS MISSING
-
-    }
-    else if (flag == RECEIVER){
-
-    }
-
-
 }
     */

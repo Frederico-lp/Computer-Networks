@@ -97,6 +97,7 @@ int i_frame_write(int fd, char a, int length, unsigned char *data, unsigned char
     *ret_buf[j+2] = FLAG;
     
     //write frame
+    int frame_length = j+2;
     int written_length = 0;
     int state = START;
     alarmCount = 0;
@@ -108,7 +109,7 @@ int i_frame_write(int fd, char a, int length, unsigned char *data, unsigned char
             alarm(linkL.timeout);
             flag = FALSE;
 
-            if( (written_length = write(fd, ret_buf, j+2)) < 0){
+            if( (written_length = write(fd, ret_buf, frame_length)) < 0){
                 perror("i message failed\n");
             }
         }
@@ -120,7 +121,7 @@ int i_frame_write(int fd, char a, int length, unsigned char *data, unsigned char
             }
                 
         }
-        else{
+        else{     //posso usar o mesmo statemachine para o frame i?
             if(state_machine(buf[state], &state)){
                 alarm(0);   
                 printf("recieved UA\n");
@@ -138,6 +139,82 @@ int i_frame_write(int fd, char a, int length, unsigned char *data, unsigned char
 
     linkL.sequenceNumber = linkL.sequenceNumber ^ 1;
     return write(fd, ret_buf, j + 3);
+}
+
+int read_i_frame(int fd){
+    int state = START;
+    int data_size = 0;
+    unsigned char buffer;
+    unsigned char *data_received = (unsigned char*)malloc(data_size);
+    int all_data_received = FALSE;
+
+    while(!all_data_received){
+        if(read(fd, buffer, 1) < 0)
+            perror("failed to read i frame\n");
+        else{
+            //ver estado
+            switch(state){
+
+                case START:
+                    if(buffer == FLAG)
+                        state = FLAG_RCV;
+                    break;
+                case FLAG_RCV:
+                    if(buffer == 0x01)
+                        state = A_RCV;
+                    else
+                        state = START;  
+                    break;
+                case A_RCV:
+                    if(buffer == linkL.sequenceNumber) //o q é aqui
+                        state = C_RCV;
+                    else
+                        state = START;
+                    break;
+                case C_RCV:
+                    if(buffer == 0x01 ^ linkL.sequenceNumber)
+                        state = DATA;
+                    else
+                        state = START;
+                    break;
+                case DATA:
+                    if(buffer == FLAG){     //finished transmitting data
+                        data_received = byte_destuffing(data_received);
+
+                        unsigned char bcc2 = data_received[0];
+                        for(int i = 1; i < data_size; i++){
+                            bcc2 ^= data_received[i];
+                        }
+
+                        unsigned char post_transmission_bcc2 = 0;//????
+                        if(strcmp(bcc2, post_transmission_bcc2) == 0){
+                            printf("data packet received!\n");
+                            all_data_received = TRUE;
+                        }
+                        else{
+                            perror("BCC2 dont match in llread\n");
+                            free(data_received);
+                            data_size = 0;
+                            data_received = malloc(data_size);
+
+                        }
+
+
+                    }
+                    else{
+                        data_size++;
+                        data_received = (unsigned char*)realloc(data_received, data_size);
+                        data_received[data_size - 1] = buffer;
+                        state = START;
+                    }
+                    break;
+            }
+        }
+    }
+    if(sizeof(data_received))   //posso fazer isto?
+        su_frame_write(fd, A_R, C_RR);
+    
+    return data_received;
 }
 
 int iniciate_connection(char *port, int connection)

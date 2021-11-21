@@ -33,6 +33,8 @@
 #define C_0     0x00
 #define C_1     0x40
 
+#define DATA 4
+
 #define TRANSMITTER 1
 #define RECEIVER 0
 
@@ -60,6 +62,8 @@ void sig_handler(int signum);
 int su_frame_write(int fd, char a, char c);
 
 int i_frame_write(int fd, char a, int length, unsigned char *data, unsigned char **ret_buf);
+
+int read_i_frame(int fd);
 
 int iniciate_connection(char *port, int connection);
 

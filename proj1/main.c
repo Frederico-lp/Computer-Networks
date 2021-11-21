@@ -1,5 +1,21 @@
 #include "application.h"
 
+/*
+FALTA:
+-corrigir warning e provavelmente novos erros
+-corrigir o c^a no estado C_RCV do state machine
+-arranjar o local do bcc2 da trama do receiver, nao percebi onde é suposto estar
+-ver assemble pic e create_control_packet e create_control_packet, eu tinha feito os ultimos
+dois e penso q um deles e parecido com o assemble pic que fizeste 
+-alterar chamadas do llread no main para novos argumentos e consequentemente mudar algumas 
+coisas no main
+-escrever o q se recebe no novo ficheiro? (main)
+-aquilo do struct termios oldtio, newtio; esta repetido varias vezes, eu ja o tinha posto
+no llopen, é mm necessario estar no main tmb?
+-ver estruturas de dados, diz q as estou a criar a mesma varias vezes(parte do ponto 1)
+-receiver penso q so esta a receber um packet, no main é preciso criar varios (ver linkL.maxSize)
+*/
+
 unsigned char * process_pic(char* path, int* size){
     FILE *f = fopen(path, "rb");
     fseek(f, 0, SEEK_END);

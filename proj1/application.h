@@ -57,9 +57,10 @@ int llopen(char *port,int flag);
 
 int llwrite(int fd, char * buffer, int length);
 
-int llread(int fd, char * buffer, char * argv);
+unsigned char* llread(int fd);
 
 int llclose(int fd);
 
 void create_packet();
 
+//int llread(int fd, char * buffer, char * argv);
