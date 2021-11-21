@@ -51,7 +51,7 @@ unsigned int numTransmissions; /*Número de tentativas em caso de falha*/
 char frame[MAX_SIZE];          /*Trama*/
 } linkLayer;
 
-linkLayer linkL;
+linkLayer *linkL;
 
 void byte_stuffing(unsigned char *packet, unsigned char **stuffed_packet, int length);
 
@@ -63,7 +63,7 @@ int su_frame_write(int fd, char a, char c);
 
 int i_frame_write(int fd, char a, int length, unsigned char *data, unsigned char **ret_buf);
 
-int read_i_frame(int fd);
+unsigned char* read_i_frame(int fd);
 
 int iniciate_connection(char *port, int connection);
 

@@ -1,9 +1,11 @@
 #include "application.h"
 
+
 /*
 FALTA:
+-adicionar algo no llwrite para mandar a flag no final e bcc2 no final?
+-mandar alguma coisa no llwrite se der timeout?
 -corrigir warning e provavelmente novos erros
--corrigir o c^a no estado C_RCV do state machine
 -arranjar o local do bcc2 da trama do receiver, nao percebi onde é suposto estar
 -ver assemble pic e create_control_packet e create_control_packet, eu tinha feito os ultimos
 dois e penso q um deles e parecido com o assemble pic que fizeste 
@@ -41,11 +43,11 @@ unsigned char * process_pic(char* path, int* size){
 
 int main(int argc, char** argv)
 {
-    //appL = (applicationLayer *)malloc(sizeof(applicationLayer));
+    appL = (applicationLayer *)malloc(sizeof(applicationLayer));
     
-    // linkL = (linkLayer *)malloc(sizeof(linkLayer));
-    linkL.timeout = 20;
-    linkL.sequenceNumber = 0;
+    linkL = (linkLayer *)malloc(sizeof(linkLayer));
+    linkL->timeout = 20;
+    linkL->sequenceNumber = 0;
 
     char *port;
     char *img;

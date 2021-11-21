@@ -72,6 +72,8 @@ int su_frame_write(int fd, char a, char c) {
 
 int i_frame_write(int fd, char a, int length, unsigned char *data, unsigned char **ret_buf) {
     //bff2 before stuffing
+    alarmFlag = FALSE;
+    alarmCount = 0;
     unsigned char bcc2 = data[0];
     for(int i = 1; i < length; i++){
         bcc2 ^= data[i];
@@ -84,8 +86,8 @@ int i_frame_write(int fd, char a, int length, unsigned char *data, unsigned char
     //put stuffed data into frame
     *ret_buf[0] = FLAG; 
     *ret_buf[1] = a;  
-    *ret_buf[2] = linkL.sequenceNumber; //sequenxe nymber!!!
-    *ret_buf[3] = a^linkL.sequenceNumber;
+    *ret_buf[2] = linkL->sequenceNumber; //sequenxe nymber!!!
+    *ret_buf[3] = a^linkL->sequenceNumber;
     int j = 4;
 
     for(int i = 0; i < length; i++, j++){
@@ -102,40 +104,38 @@ int i_frame_write(int fd, char a, int length, unsigned char *data, unsigned char
     unsigned char buf[5];
     int flag = TRUE;
 
-    while(alarmCount < linkL.numTransmissions){
-        if(flag){
-            alarm(linkL.timeout);
-            flag = FALSE;
-
+    do{
             if( (written_length = write(fd, ret_buf, frame_length)) < 0){
-                perror("i message failed\n");
+                perror("i frame failed\n");
             }
-        }
-
-        if(read(fd, &buf[state], 1) < 0){   //check if any byte of ua was recieved
-            if(alarmFlag){
-                perror("alarm timeout\n");
-                break;
+            alarm(linkL->timeout);
+            flag = FALSE;
+            while(!alarmFlag && state != BCC_OK ){
+                read(fd, &buf[state], 1);
+                state_machine(buf, &state);
             }
-                
-        }
-        else{     //posso usar o mesmo statemachine para o frame i?
-            if(state_machine(buf[state], &state)){
-                alarm(0);   
-                printf("recieved UA\n");
+            if(state == BCC_OK){
+                alarm(0);
                 break;
             }
             
-        }
-        
-        
-    }
 
-    linkL.sequenceNumber = linkL.sequenceNumber ^ 1;
-    return write(fd, ret_buf, j + 3);
+        }
+        while(alarmFlag && alarmCount < linkL->numTransmissions);
+
+        if(alarmCount == linkL->numTransmissions){
+            perror("Error sending i packet, too many attempts\n");
+            return -1;
+        }
+        else{
+            printf("UA from SET message recieved\n");
+        }
+
+    linkL->sequenceNumber = linkL->sequenceNumber ^ 1;
+    return write(fd, ret_buf, frame_length);
 }
 
-int read_i_frame(int fd){
+unsigned char* read_i_frame(int fd){
     int state = START;
     int data_size = 0;
     unsigned char buffer;
@@ -143,7 +143,7 @@ int read_i_frame(int fd){
     int all_data_received = FALSE;
 
     while(!all_data_received){
-        if(read(fd, buffer, 1) < 0)
+        if(read(fd, &buffer, 1) < 0)
             perror("failed to read i frame\n");
         else{
             //ver estado
@@ -160,13 +160,13 @@ int read_i_frame(int fd){
                         state = START;  
                     break;
                 case A_RCV:
-                    if(buffer == linkL.sequenceNumber) //o q é aqui
+                    if(buffer == linkL->sequenceNumber)
                         state = C_RCV;
                     else
                         state = START;
                     break;
                 case C_RCV:
-                    if(buffer == 0x01 ^ linkL.sequenceNumber)
+                    if(buffer == 0x01 ^ linkL->sequenceNumber)
                         state = DATA;
                     else
                         state = START;
@@ -180,7 +180,7 @@ int read_i_frame(int fd){
                             bcc2 ^= data_received[i];
                         }
 
-                        unsigned char post_transmission_bcc2 = 0;//????
+                        unsigned char post_transmission_bcc2 = data_received[data_size - 1];
                         if(strcmp(bcc2, post_transmission_bcc2) == 0){
                             printf("data packet received!\n");
                             all_data_received = TRUE;
@@ -203,7 +203,7 @@ int read_i_frame(int fd){
             }
         }
     }
-    if(sizeof(data_received))   //posso fazer isto?
+    if(data_received[0])   //posso fazer isto?
         su_frame_write(fd, A_R, C_RR);
     
     return data_received;
@@ -273,20 +273,22 @@ int iniciate_connection(char *port, int connection)
             if(su_frame_write(fd, A_E, C_SET) < 0){
                 perror("set message failed\n");
             }
-            alarm(linkL.timeout);
+            alarm(linkL->timeout);
             flag = FALSE;
-            while(alarmFlag && state != BCC_OK ){
+            while(!alarmFlag && state != BCC_OK ){
                 read(fd, &buf[state], 1);
-                state_machine(buf[state], &state);
+                state_machine(buf, &state);
             }
-            if(state == BCC_OK)
+            if(state == BCC_OK){
+                alarm(0);
                 break;
+            }
             
 
         }
-        while(!alarmFlag && alarmCount < linkL.numTransmissions);
+        while(alarmFlag && alarmCount < linkL->numTransmissions);
 
-        if(alarmCount == linkL.numTransmissions){
+        if(alarmCount == linkL->numTransmissions){
             perror("Error establishing connection, too many attempts\n");
             return -1;
         }
@@ -299,7 +301,7 @@ int iniciate_connection(char *port, int connection)
             if (read(fd, &buf[state], 1) < 0) { // Receive SET message
                 perror("Failed to read SET message.");
             } else {
-                state_machine(buf[state], &state);
+                state_machine(buf, &state);
             }
         }
         printf("UA recieved!\n");
@@ -328,20 +330,22 @@ int terminate_connection(int *fd, int connection)
             if(su_frame_write(*fd, A_E, C_DISC) < 0){
                 perror("disc message failed\n");
             }
-            alarm(linkL.timeout);
+            alarm(linkL->timeout);
             flag = FALSE;
-            while(alarmFlag && state != BCC_OK ){
+            while(!alarmFlag && state != BCC_OK ){
                 read(*fd, &buf[state], 1);
-                state_machine(buf[state], &state);
+                state_machine(buf, &state);
             }
-            if(state == BCC_OK)
+            if(state == BCC_OK){
+                alarm(0);
                 break;
+            }
             
 
         }
-        while(!alarmFlag && alarmCount < linkL.numTransmissions);
+        while(alarmFlag && alarmCount < linkL->numTransmissions);
 
-        if(alarmCount == linkL.numTransmissions){
+        if(alarmCount == linkL->numTransmissions){
             perror("Error establishing connection, too many attempts\n");
             return -1;
         }
@@ -356,7 +360,7 @@ int terminate_connection(int *fd, int connection)
             if (read(*fd, &buf[state], 1) < 0) { // Receive SET message
                 perror("Failed to read DISC message.");
             } else {
-                state_machine(buf[state], &state);
+                state_machine(buf, &state);
             }
         }
         printf("DISC recieved!\n");
@@ -371,7 +375,7 @@ int terminate_connection(int *fd, int connection)
             if (read(*fd, &buf[state], 1) < 0) { // Receive UA message
                 perror("Failed to read SET message.");
             } else {
-                state_machine(buf[state], &state);
+                state_machine(buf, &state);
             }
         }
         printf("UA recieved!\n");

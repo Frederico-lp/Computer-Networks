@@ -14,6 +14,5 @@
 #define C_RCV 3
 #define BCC_OK 4
 
-volatile int STOP=FALSE;
 
-int state_machine(unsigned char buf, int *state);
+int state_machine(unsigned char *buf, int *state);

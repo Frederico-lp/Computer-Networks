@@ -23,7 +23,7 @@ int fileDescriptor; /*Descritor correspondente à porta série*/
 int status;         /*TRANSMITTER | RECEIVER*/
 } applicationLayer;
 
-applicationLayer appL;
+applicationLayer *appL;
 
 int create_control_packet(size_t c, size_t t1, size_t t2, int file_size, char *file_name, char**packet);
 

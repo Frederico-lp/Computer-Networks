@@ -47,9 +47,9 @@ int create_data_packet(size_t c, unsigned char *data, int data_size, char**packe
 }
 
 int llopen(char *port,int flag) {
-    appL.fileDescriptor = iniciate_connection(port, flag);
-    appL.status = flag;
-    return appL.fileDescriptor;
+    appL->fileDescriptor = iniciate_connection(port, flag);
+    appL->status = flag;
+    return appL->fileDescriptor;
 }
 
 
@@ -65,5 +65,5 @@ unsigned char* llread(int fd){
 }
 
 int llclose(int fd){
-    return terminate_connection(&fd, appL.status);
+    return terminate_connection(&fd, appL->status);
 }
