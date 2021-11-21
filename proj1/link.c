@@ -180,7 +180,7 @@ int read_i_frame(int fd){
                             bcc2 ^= data_received[i];
                         }
 
-                        unsigned char post_transmission_bcc2 = 0;//????
+                        unsigned char post_transmission_bcc2 = 0;     //????
                         if(strcmp(bcc2, post_transmission_bcc2) == 0){
                             printf("data packet received!\n");
                             all_data_received = TRUE;
@@ -203,7 +203,7 @@ int read_i_frame(int fd){
             }
         }
     }
-    if(sizeof(data_received))   //posso fazer isto?
+    if(sizeof(*data_received))   //posso fazer isto?
         su_frame_write(fd, A_R, C_RR);
     
     return data_received;
