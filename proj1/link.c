@@ -58,8 +58,6 @@ unsigned char* byte_destuffing(unsigned char *packet){
     return msg;
 }
 
-
-
 int su_frame_write(int fd, char a, char c) {
     unsigned char buf[5];
 
@@ -133,10 +131,6 @@ int i_frame_write(int fd, char a, int length, unsigned char *data, unsigned char
         
     }
 
-
-
-
-
     linkL.sequenceNumber = linkL.sequenceNumber ^ 1;
     return write(fd, ret_buf, j + 3);
 }
@@ -198,8 +192,6 @@ int read_i_frame(int fd){
                             data_received = malloc(data_size);
 
                         }
-
-
                     }
                     else{
                         data_size++;

@@ -16,36 +16,12 @@
 
 #define FLAG 0x7e
 
-/*
-unsigned char T_SET[5];
-unsigned char T_UA[5];
-unsigned char T_DISC[5];
-struct termios oldtio, newtio;
-int fd;
-
-int alarmFlag;
-int alarmCount = 0;
-int sequenceNumber = 0;
-*/
-
-/*
-void sig_handler(int signum){
-  alarmFlag = signum;
-  alarmCount++;
-}
-*/
-
-
-
-
 /*-------------------------------------------------------------------------------*/
 
 typedef struct {
 int fileDescriptor; /*Descritor correspondente à porta série*/
 int status;         /*TRANSMITTER | RECEIVER*/
 } applicationLayer;
-
-
 
 applicationLayer appL;
 
@@ -62,5 +38,3 @@ unsigned char* llread(int fd);
 int llclose(int fd);
 
 void create_packet();
-
-//int llread(int fd, char * buffer, char * argv);

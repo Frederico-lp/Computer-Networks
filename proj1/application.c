@@ -60,49 +60,10 @@ int llwrite(int fd, char *buffer, int length){
     return i_frame_write(fd, A_E, length, buffer, ret_buf);
 }
 
-
-
 unsigned char* llread(int fd){
     return read_i_frame(fd);
 }
 
-
-
 int llclose(int fd){
     return terminate_connection(&fd, appL.status);
 }
-
-
-
-    /*
-int llread(int fd, char * buffer, char * argv){
-
-    int res;
-    char buf[255];
-    int stop;
-
-     
-    //    O ciclo WHILE deve ser alterado de modo a respeitar o indicado no gui�o 
-    
-    while (stop == FALSE)
-    {                           
-        res = read(fd, buf, 5);
-        buf[res] = 0;            
-        printf(":%s:%d\n", buf, res);
-        if (buf[0] == 'z') stop = TRUE;
-    }
-
-
-    unsigned char *msg = malloc(sizeof(*buffer)), bytes_read;
-    int flag = 0, CURRENT_STATE = START;
-    
-    //while(state_machine(&bytes_read, CURRENT_STATE)){
-    while(!state_machine(bytes_read, &CURRENT_STATE)){
-        read(fd, &bytes_read, 32); // reads 32 bytes
-    }
-
-    //needs checking and confirmation
-    
-    return sizeof(*msg);
-}
-    */
