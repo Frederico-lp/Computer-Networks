@@ -100,13 +100,13 @@ int main(int argc, char** argv)
             unsigned char *msg_start;
             unsigned char *msg_end;
 
-            msg_start = llread(fd, port, argv[1]); // TO-DO
+            msg_start = llread(fd);
 
             if(msg_start[0] == REJ){
                 write(STDOUT_FILENO, "Received start\n", 25);
-                msg = llread(fd, port, argv[1]);
+                msg = llread(fd);
                 if(msg[0] != ESCAPE_OCTET){
-                    msg_end = llread(fd, port, argv[1]); // MISSING FLAG 2
+                    msg_end = llread(fd); 
                     if(msg_end[0] == 2){
                         write(STDOUT_FILENO, "Received end", 25);
                     }
