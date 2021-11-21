@@ -1,7 +1,10 @@
 #include "application.h"
 
+applicationLayer *appL;
+
 int sequence_number = 0;
 
+/*
 int create_control_packet(size_t c, size_t t1, size_t t2, 
                 int file_size, char *file_name, char**packet){
     //l1 = size, l2 = name
@@ -28,7 +31,8 @@ int create_control_packet(size_t c, size_t t1, size_t t2,
 
     return packet_size;
 }
-
+*/
+/*
 int create_data_packet(size_t c, unsigned char *data, int data_size, char**packet){
     size_t l1 = data_size % 256;
     size_t l2 = (int)(data_size / 256);
@@ -45,8 +49,10 @@ int create_data_packet(size_t c, unsigned char *data, int data_size, char**packe
 
     return packet_size;
 }
+*/
 
 int llopen(char *port,int flag) {
+    
     appL->fileDescriptor = iniciate_connection(port, flag);
     appL->status = flag;
     return appL->fileDescriptor;

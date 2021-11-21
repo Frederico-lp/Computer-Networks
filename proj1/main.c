@@ -3,10 +3,9 @@
 
 /*
 FALTA:
--adicionar algo no llwrite para mandar a flag no final e bcc2 no final?
+-control[1] = 0; // N o q e isto
 -mandar alguma coisa no llwrite se der timeout?
--corrigir warning e provavelmente novos erros
--arranjar o local do bcc2 da trama do receiver, nao percebi onde é suposto estar
+-corrigir warning
 -ver assemble pic e create_control_packet e create_control_packet, eu tinha feito os ultimos
 dois e penso q um deles e parecido com o assemble pic que fizeste ------THIS
 -escrever o q se recebe no novo ficheiro? (main) ------THIS DONE
@@ -19,39 +18,57 @@ no llopen, é mm necessario estar no main tmb?
 unsigned char * process_pic(char* path, int* size){
     FILE *f = fopen(path, "rb");
     fseek(f, 0, SEEK_END);
-    long int lenght = ftell(f);
-    unsigned char * control = (unsigned char*)malloc(lenght+4);
-    unsigned char *buffer = (unsigned char *)malloc(lenght);
+    long int length = ftell(f); //qts bytes tem o ficheiro
+    unsigned char *data = (unsigned char*)malloc(length+4);
+    unsigned char *buffer = (unsigned char *)malloc(length);
 
     fseek(f, 0, SEEK_SET);
-    fread(buffer, 1, lenght, f);
+    fread(buffer, 1, length, f);
     fclose(f);
 
-	control[0] = C_REJ;	// C
-	control[1] = 0; // N
-	control[2] = lenght / 255;	// L2
-	control[3] = lenght % 255; // L1
+	data[0] = C_REJ;	// C
+	data[1] = 0; // N
+	data[2] = length / 255;	// L2
+	data[3] = length % 255; // L1
 
-	for (int i = 0; i < lenght; i++) {
-		control[i+4] = buffer[i];
+	for (int i = 0; i < length; i++) {
+		data[i+4] = buffer[i];
 	}
 
-	return control;
+	return data;
 }
+/*
+int assemble_pic(unsigned char * pic_buffer){
+    FILE * pic;
+    pic = fopen("penguin.gif", "wb+");
+
+    int picSize = pic_buffer[2]*255 + pic_buffer[3];
+    unsigned char * aux = malloc(picSize);
+
+    for(int i = 0; i < picSize; i++){
+        aux[i] = pic_buffer[i+4];
+    }
+
+    fwrite(aux, 1, picSize-1, pic);
+    fclose(pic);
+
+    return 0;
+}
+*/
 
 int main(int argc, char** argv)
 {
-    appL = (applicationLayer *)malloc(sizeof(applicationLayer));
+    // appL = (applicationLayer *)malloc(sizeof(applicationLayer));
     
-    linkL = (linkLayer *)malloc(sizeof(linkLayer));
-    linkL->timeout = 20;
-    linkL->sequenceNumber = 0;
+    // linkL = (linkLayer *)malloc(sizeof(linkLayer));
+    // linkL->timeout = 20;
+    // linkL->sequenceNumber = 0;
 
     char *port;
     char *img;
     unsigned char * control;
 
-    int fd, res, lenght;
+    int fd, res, length;
     struct termios oldtio, newtio;
     char buf[255];
 
@@ -93,57 +110,62 @@ int main(int argc, char** argv)
 			}
 		}
     }
-
     if(img == NULL){ // Open comunications for receiver
         if((fd = llopen(port, RECEIVER))){
             unsigned char *msg;
+            unsigned char *buffer;
             unsigned char *msg_start;
             unsigned char *msg_end;
 
             msg_start = llread(fd);
 
             if(msg_start[0] == REJ){
-                write(STDOUT_FILENO, "Received start\n", 25);
-                
-                msg = llread(fd);
-                if(msg[0] != ESCAPE_OCTET){
-                    msg_end = llread(fd); 
-                    if(msg_end[0] == 2){
-                        write(STDOUT_FILENO, "Received end", 25);
+                printf("Received start\n");
+                /*
+                ESTA MAL
+                int reading_data = FALSE;
+                int i = 0;
+                while(!reading_data){
+                    buffer = llread(fd);
+                    strcat(msg, buffer);
+                    if(msg[strlen(msg) - ] == 3){  //campo de controlo
+                        reading_data = TRUE;
+                        printf("Received end\n");
                     }
+                }
+                msg_end = msg[i];
+                free(msg[i]);
+                */
+                msg = llread(fd);
+                msg_end = llread(fd);
 
                 }
-            }
+            
             llclose(*port);
 
-            if(assemble_pic(msg) != 0){
-                perror("Error on assembling picture\n");
-                exit(1);
+            int number_frames = sizeof(*msg) / (MAX_SIZE - 6);
+            FILE *file_return_final = fopen("return_file.gif", "w");
+            for(int i = 0; i< number_frames; i++){
+                fputc(msg[i], file_return_final);
             }
-            else {
-                int number_frames = sizeof(*msg) / (MAX_SIZE - 6);
-                FILE *file_return_final = fopen("return_file.gif", "w");
-                for(int i = 0; i< number_frames; i++){
-                    fputc(msg[i], file_return_final);
-                }
-                fclose(file_return_final);
-            }
+            fclose(file_return_final);
+        
         }
     }
     else if(llopen(port, TRANSMITTER)){ // Open comunications for transmitter
-        unsigned char * buffer = process_pic(img, &lenght);
-        if(lenght <= 5){ // demand at least a byte, the rest is the header
+        unsigned char * buffer = process_pic(img, &length);
+        if(length <= 5){ // demand at least a byte, the rest is the header
             printf("Error processing image\n");
             exit(1);
         }
-        //n sei se podes associar um int a um so elemento de um unsigned char*
+        //CONTROL packet
         control[0] = 2; // C_BEGIN
         control[1] = 0; // T_FILESIZE
         control[2] = 1;
-        control[3] = lenght;
+        control[3] = length;
 
-        if(llwrite(fd, control, 4)){
-            if(llwrite(fd, buffer, lenght)){
+        if(llwrite(fd, control, 4)){    //escreve control packet
+            if(llwrite(fd, buffer, length)){
                 control[0] = 3;
                 llwrite(fd, control, 4);
             }
@@ -162,19 +184,3 @@ int main(int argc, char** argv)
 	return 0;
 }
 
-int assemble_pic(unsigned char * pic_buffer){
-    FILE * pic;
-    pic = fopen("randomfile.txt", "wb+");
-
-    int picSize = pic_buffer[2]*255 + pic_buffer[3];
-    unsigned char * aux = malloc(picSize);
-
-    for(int i = 0; i < picSize; i++){
-        aux[i] = pic_buffer[i+4];
-    }
-
-    fwrite(aux, 1, picSize-1, pic);
-    fclose(pic);
-
-    return 0;
-}

@@ -1,12 +1,3 @@
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <termios.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <signal.h>
-#include <string.h>
 #include "statemachine.h"
 
 
@@ -42,7 +33,7 @@
 
 #define MAX_SIZE 50
 
-typedef struct {
+typedef struct linkLayer{
 char port[20];                 /*Dispositivo /dev/ttySx, x = 0, 1*/
 int baudRate;                  /*Velocidade de transmissão*/
 unsigned int sequenceNumber;   /*Número de sequência da trama: 0, 1*/
@@ -51,7 +42,7 @@ unsigned int numTransmissions; /*Número de tentativas em caso de falha*/
 char frame[MAX_SIZE];          /*Trama*/
 } linkLayer;
 
-linkLayer *linkL;
+
 
 void byte_stuffing(unsigned char *packet, unsigned char **stuffed_packet, int length);
 

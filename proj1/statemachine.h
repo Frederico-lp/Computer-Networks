@@ -5,6 +5,8 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <signal.h>
+#include <string.h>
+#include <stdlib.h>
 
 #define FALSE 0
 #define TRUE 1
