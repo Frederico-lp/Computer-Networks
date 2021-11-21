@@ -107,27 +107,22 @@ int llread(int fd, char * buffer, char * argv){
     */
     while (stop == FALSE)
     {                           /* loop for input */
-        res = read(fd, buf, 255); /* returns after 5 chars have been input */
+        res = read(fd, buf, 5); /* returns after 5 chars have been input */
         buf[res] = 0;             /* so we can printf... */
         printf(":%s:%d\n", buf, res);
-        if (buf[0] == 'z')
-        stop = TRUE;
+        if (buf[0] == 'z') stop = TRUE;
     }
 
     tcsetattr(fd, TCSANOW, &oldtio);
     close(fd);
     return 0;
 
-    unsigned char *msg = malloc(sizeof(*buffer)), byte_read;
+    unsigned char *msg = malloc(sizeof(*buffer)), bytes_read;
     int flag = 0, CURRENT_STATE = START;
     
-    //while(state_machine(&byte_read, CURRENT_STATE)){
-    while(!state_machine(byte_read, &CURRENT_STATE)){
-
-
-
-
-        read(fd, &byte_read, 1);
+    //while(state_machine(&bytes_read, CURRENT_STATE)){
+    while(!state_machine(bytes_read, &CURRENT_STATE)){
+        read(fd, &bytes_read, 32); // reads 32 bytes
     }
 
     //needs checking and confirmation
