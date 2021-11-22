@@ -61,9 +61,8 @@ int llopen(char *port,int flag) {
 
 int llwrite(int fd, char *buffer, int length){
     //1º preparar buffer
-    unsigned char **ret_buf;
     //fazer malloc
-    return i_frame_write(fd, A_E, length, buffer, ret_buf);
+    return i_frame_write(fd, A_E, length, buffer);
 }
 
 unsigned char* llread(int fd){

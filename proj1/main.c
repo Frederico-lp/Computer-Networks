@@ -97,8 +97,10 @@ int main(int argc, char** argv)
             unsigned char *msg_start;
             unsigned char *msg_end;
 
+            printf("receiver reading first control packet\n");
             msg_start = llread(fd);
 
+            printf("receiver reading first data packet\n");
             if(msg_start[0] == REJ){
                 printf("Received start\n");
                 /*
@@ -132,7 +134,7 @@ int main(int argc, char** argv)
         
         }
     }
-    else if(llopen(port, TRANSMITTER)){ // Open comunications for transmitter
+    else if(fd = llopen(port, TRANSMITTER)){ // Open comunications for transmitter
         unsigned char * buffer = process_pic(img, &length);
         if(length <= 5){ // demand at least a byte, the rest is the header
             printf("Error processing image\n");
@@ -143,8 +145,10 @@ int main(int argc, char** argv)
         control[1] = 0; // T_FILESIZE
         control[2] = 1;
         control[3] = length;
-
+        printf("1 packet\n");
+        printf("fd = %d\n", fd);
         if(llwrite(fd, control, 4)){    //escreve control packet
+            printf("2 packet\n");
             if(llwrite(fd, buffer, length)){
                 control[0] = 3;
                 llwrite(fd, control, 4);

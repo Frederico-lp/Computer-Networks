@@ -53,7 +53,7 @@ void sig_handler(int signum);
 
 int su_frame_write(int fd, char a, char c);
 
-int i_frame_write(int fd, char a, int length, unsigned char *data, unsigned char **ret_buf);
+int i_frame_write(int fd, char a, int length, unsigned char *data);
 
 unsigned char* read_i_frame(int fd);
 

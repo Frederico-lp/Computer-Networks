@@ -1,7 +1,7 @@
 #include "link.h"
 
 unsigned int sequenceNumber;   /*Número de sequência da trama: 0, 1*/
-unsigned int timeout = 20;          /*Valor do temporizador: 1 s*/
+unsigned int timeout = 3;          /*Valor do temporizador: 1 s*/
 unsigned int numTransmissions = 10; /*Número de tentativas em caso de falha*/
 
 //NOTA: adicionar variavel para while n continuar dps de chegar ao fim do state machine
@@ -75,7 +75,7 @@ int su_frame_write(int fd, char a, char c) {
     return write(fd, buf, 5);
 }
 
-int i_frame_write(int fd, char a, int length, unsigned char *data, unsigned char **ret_buf) {
+int i_frame_write(int fd, char a, int length, unsigned char *data) {
     //bff2 before stuffing
     alarmFlag = FALSE;
     alarmCount = 0;
@@ -83,22 +83,22 @@ int i_frame_write(int fd, char a, int length, unsigned char *data, unsigned char
     for(int i = 1; i < length; i++){
         bcc2 ^= data[i];
     }
-
+    unsigned char *framed_data = (unsigned char*)malloc(sizeof(unsigned char) * (length + 7));
     //byte stuffing
     unsigned char *stuffed_data =  byte_stuffing(data, length);
 
     //put stuffed data into frame
-    *ret_buf[0] = FLAG; 
-    *ret_buf[1] = a;  
-    *ret_buf[2] =  sequenceNumber; //sequenxe nymber!!!
-    *ret_buf[3] = a^ sequenceNumber;
+    framed_data[0] = FLAG; 
+    framed_data[1] = a;  
+    framed_data[2] =  sequenceNumber; //sequenxe nymber!!!
+    framed_data[3] = a^ sequenceNumber;
     int j = 4;
 
     for(int i = 0; i < length; i++, j++){
-        *ret_buf[j] = data[i];          //começa no buf[2]
+        framed_data[j] = data[i];          //começa no buf[2]
     }
-    *ret_buf[j+1] = bcc2;
-    *ret_buf[j+2] = FLAG;
+    framed_data[j+1] = bcc2;
+    framed_data[j+2] = FLAG;
     
     //write frame
     int frame_length = j+2;
@@ -106,13 +106,14 @@ int i_frame_write(int fd, char a, int length, unsigned char *data, unsigned char
     int state = START;
     alarmCount = 0;
     unsigned char buf[5];
-    int flag = TRUE;
+    int flag = FALSE;
 
     do{
-            if( (written_length = write(fd, ret_buf, frame_length)) < 0){
+            if( (written_length = write(fd, framed_data, frame_length)) < 0){
+                printf("written_length = %d ", written_length);
                 perror("i frame failed\n");
             }
-            alarm(  timeout);
+            alarm( timeout);
             flag = FALSE;
             while(!alarmFlag && state != BCC_OK ){
                 read(fd, &buf[state], 1);
@@ -135,8 +136,9 @@ int i_frame_write(int fd, char a, int length, unsigned char *data, unsigned char
             printf("UA from SET message recieved\n");
         }
 
-      sequenceNumber =   sequenceNumber ^ 1;
-    return write(fd, ret_buf, frame_length);
+      sequenceNumber =  sequenceNumber ^ 1;
+    return written_length;
+
 }
 
 unsigned char* read_i_frame(int fd){
@@ -222,7 +224,7 @@ int iniciate_connection(char *port, int connection)
     struct termios oldtio,newtio;
     char buf[5];
     alarmCount = 0;
-    alarmFlag = 0;
+    alarmFlag = FALSE;
     int i, sum = 0, speed = 0;
 
     (void) signal(SIGALRM, sig_handler);    //Register signal handler
@@ -327,7 +329,7 @@ int terminate_connection(int *fd, int connection)
 {
     char buf[5];
     alarmCount = 0;
-    alarmFlag = 0;
+    alarmFlag = FALSE;
     int state = START;
     if(connection == TRANSMITTER){
         int flag = TRUE;
