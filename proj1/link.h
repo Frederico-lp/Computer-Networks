@@ -45,9 +45,9 @@ char frame[MAX_SIZE];          /*Trama*/
 
 
 
-unsigned char * byte_stuffing(unsigned char *packet, int length);
+unsigned char * byte_stuffing(unsigned char *packet, int *length);
 
-unsigned char* byte_destuffing(unsigned char *packet, int length);
+unsigned char* byte_destuffing(unsigned char *packet, int *length);
 
 void sig_handler(int signum);
 

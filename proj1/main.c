@@ -129,11 +129,15 @@ int main(int argc, char** argv)
             llclose(fd, RECEIVER);
 
             int number_frames = sizeof(*msg) / (MAX_SIZE - 6);
-            FILE *file_return_final = fopen("return_file.gif", "w");
-            for(int i = 0; i< number_frames; i++){
-                fputc(msg[i], file_return_final);
+            FILE *f = fopen("return_file.gif", "w");
+            // for(int i = 0; i< number_frames; i++){
+            //     fputc(msg[i], file_return_final);
+            // }
+            int written = fwrite(msg, sizeof(char), sizeof(msg), f);
+            if (written == 0) {
+                printf("Error during writing to file !");
             }
-            fclose(file_return_final);
+            fclose(f);
         
         }
     }

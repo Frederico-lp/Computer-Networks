@@ -19,47 +19,51 @@ void change_sequenceNumber(){
     else sequenceNumber = 1;
 }
 
-unsigned char * byte_stuffing(unsigned char *packet, int length){
+unsigned char * byte_stuffing(unsigned char *packet, int *length){
     //so do data no i packet
-    unsigned char *stuffed_packet;
-    stuffed_packet = (unsigned char *)malloc(sizeof(unsigned char)* (length + 20));
-    for(int i = 0; i < length; i++){
+    unsigned char *stuffed_packet = NULL;
+    stuffed_packet = (unsigned char *)malloc( *length * 2);
+    int j = 0;
+    for(int i = 0; i < *length; i++){
         if(packet[i] == FLAG){
-            stuffed_packet[i] = 0x7d;
-            stuffed_packet[i+1] = 0x5e;
-            i++;
+            stuffed_packet[j] = 0x7d;
+            stuffed_packet[++j] = 0x5e;
         }
         else if(packet[i] == ESCAPE_OCTET){
-            stuffed_packet[i] = 0x7d;
-            stuffed_packet[i+1] = 0x5d;
-            i++;
+            stuffed_packet[j] = 0x7d;
+            stuffed_packet[++j] = 0x5d;
         }
-        else stuffed_packet[i] = packet[i];
+        else stuffed_packet[j] = packet[i];
+
+        j++;
     //printf("data = %x, stuffed data = %x\n",  packet[i], stuffed_packet[i] );
-    
     }
+    *length = j;
     return stuffed_packet;
 
 }
 
-unsigned char* byte_destuffing(unsigned char *packet, int length){
+unsigned char* byte_destuffing(unsigned char *packet, int *length){
     //a partir do data do i packet ate ao bcc2(nao inclusive)
-    unsigned char * msg = malloc(sizeof(packet) * length);
-    unsigned char * aux_msg = malloc(sizeof(*packet) * length);
+    return packet;
+    unsigned char * msg = malloc(sizeof(packet) * *length);
+    unsigned char * aux_msg = malloc(sizeof(*packet) * *length);
     int j = 0;
-    for(int i = 0; i < length; i++, j++){
+    for(int i = 0; i < *length; i++, j++){
         if(packet[i] != ESCAPE_OCTET){
             aux_msg[j] = packet[i];
         }
         if(packet[i] == ESCAPE_OCTET){
             if(packet[i+1] == 0x5e){
                 aux_msg[j] = FLAG;
+                *length--;
                 i++;
             }
         }
         else if(packet[i] == ESCAPE_OCTET){
             if(packet[i+1] == 0x5d){
                 aux_msg[j] = ESCAPE_OCTET;
+                *length--;
                 i++;
             }
         }
@@ -89,34 +93,33 @@ int su_frame_write(int fd, char a, char c) {
 
 int i_frame_write(int fd, char a, int length, unsigned char *data) {
     //bff2 before stuffing
-    printf("length = %d", length);
     alarmFlag = FALSE;
     alarmCount = 0;
     unsigned char bcc2 = data[0];
     for(int i = 1; i < length; i++){
         bcc2 ^= data[i];
+        //printf("   bcc2: %x   ", data[i]);
     }
     unsigned char *framed_data = (unsigned char*)malloc(sizeof(unsigned char) * (length + 7));
     //byte stuffing
-    unsigned char *stuffed_data = byte_stuffing(data, length);
-    // for(int i = 0; i<length;i++)
-    //     printf("stuffed data in main = %x\n", stuffed_data[i]);
-
+    unsigned char *stuffed_data = byte_stuffing(data, &length);
+    if(strcmp(data, stuffed_data) == 0)
+        printf("sao iguais\n");
     //put stuffed data into frame
     framed_data[0] = FLAG; 
     framed_data[1] = a;  
-    framed_data[2] = sequenceNumber; //sequenxe nymber!!!
+    framed_data[2] = sequenceNumber; 
     framed_data[3] = a^ sequenceNumber;
     int j = 4;
 
     for(int i = 0; i < length; i++){
-        framed_data[j] = stuffed_data[j+i];        //começa no buf[2]
+        framed_data[j] = stuffed_data[i];        //começa no buf[2]
+        printf("   bcc2: %x   ", stuffed_data[j]);
         j++;
     }
     framed_data[j+1] = bcc2;
     framed_data[j+2] = FLAG;
 
-    printf("original bcc2 = %x\n", bcc2);
     //write frame
     int frame_length = j+2+1; //+1 bcd 0 index
     int written_length = 0;
@@ -217,40 +220,42 @@ unsigned char* read_i_frame(int fd){
                         state = START;
                     break;
                 case DATA:
-                    if(data_couter % 1000 == 0)
-                        printf("buffer: %x state :data\n",buffer);
+                    //printf("buffer: %x state :data\n",buffer);
                     // printf("data counter = %d\n", data_couter);
                     data_couter++;
                     //sleep(1);
                     //exit(1);
                     if(buffer == FLAG){     //finished transmitting data
                         printf("received final flag!\n");
-                        data_received = byte_destuffing(data_received, data_size);  //data size starts in 0
+                        data_received = byte_destuffing(data_received, &data_size);  //data size starts in 0
 
-                        unsigned char bcc2 = data_received[0];
-                        for(int i = 1; i < data_size; i++){
-                            bcc2 ^= data_received[i];
+                        unsigned char post_transmission_bcc2 = data_received[0];
+                        for(int i = 1; i < data_size - 2; i++){
+                            post_transmission_bcc2 ^= data_received[i];
+                            //printf("   bcc2: %x   ", data_received[i]);
                         }
 
-                        unsigned char post_transmission_bcc2 = data_received[data_size];
+                        unsigned char bcc2 = data_received[data_size-1];
+                        printf(" data length = %d", data_size);
                         printf("'original' bcc2 = %x, other bcc2 = %x\n", bcc2, post_transmission_bcc2);
 
-                        //if(strcmp(&bcc2, &post_transmission_bcc2) == 0){
+                        if(bcc2 == post_transmission_bcc2){
                             printf("data packet received!\n");
                             all_data_received = TRUE;
-                        //}
-                        // else{
-                        //     perror("BCC2 dont match in llread\n");
-                        //     free(data_received);
-                        //     data_size = 0;
-                        //     data_received = malloc(data_size);
+                        }
+                        else{
+                            perror("BCC2 dont match in llread\n");
+                            free(data_received);
+                            data_size = 0;
+                            data_received = malloc(data_size);
 
-                        // }
+                        }
                     }
                     else{
                         data_size++;
                         data_received = (unsigned char*)realloc(data_received, data_size);
                         data_received[data_size - 1] = buffer;
+                        printf("buffer = %x", buffer);
                     }
                     break;
             }
