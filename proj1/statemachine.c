@@ -8,14 +8,14 @@ int state_machine(unsigned char *buf, int *state){
         case START:
             if(buf[START] == 0x7e){
                 printf("buffer: %x state :%d\n",buf[*state], *state);
-                *state++;
+                (*state)++;
             }
             break;
 
         case FLAG_RCV:
             printf("buffer: %x state :%d\n",buf[*state], *state);
             if(buf[FLAG_RCV] == 0x03 || buf[FLAG_RCV] == 0x01){
-                *state++;
+                (*state)++;
 
             }
             else if(buf[FLAG_RCV] == 0x7e){
@@ -30,7 +30,7 @@ int state_machine(unsigned char *buf, int *state){
             printf("buffer: %x state :%d\n",buf[*state], *state);
             if(buf[A_RCV] == 0x03 || buf[A_RCV] == 0x07 || buf[A_RCV] == 0x0b 
                 || buf[A_RCV] == 0x05  || buf[A_RCV] == 0x01 ){ //different options for each signal
-                *state++;
+                (*state)++;
 
             }
             else if(buf[A_RCV] == 0x7e){
@@ -45,7 +45,7 @@ int state_machine(unsigned char *buf, int *state){
         case C_RCV:
             printf("buffer: %x state :%d\n",buf[*state], *state);
             if( buf[C_RCV] == (buf[1] ^ buf[2]) ) {
-                *state++;
+                (*state)++;
             }
             else if(buf[C_RCV] == 0x7e){
                 *state = FLAG_RCV;
@@ -68,6 +68,6 @@ int state_machine(unsigned char *buf, int *state){
             }
             break;
     }
-    
+    printf("esta a retornar\n");
     return FALSE;
 }

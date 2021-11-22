@@ -18,20 +18,20 @@ no llopen, é mm necessario estar no main tmb?
 unsigned char * process_pic(char* path, int* size){
     FILE *f = fopen(path, "rb");
     fseek(f, 0, SEEK_END);
-    long int length = ftell(f); //qts bytes tem o ficheiro
-    unsigned char *data = (unsigned char*)malloc(length+4);
-    unsigned char *buffer = (unsigned char *)malloc(length);
+    *size = ftell(f); //qts bytes tem o ficheiro
+    unsigned char *data = (unsigned char*)malloc(*size+4);
+    unsigned char *buffer = (unsigned char *)malloc(*size);
 
     fseek(f, 0, SEEK_SET);
-    fread(buffer, 1, length, f);
+    fread(buffer, 1, *size, f);
     fclose(f);
 
 	data[0] = C_REJ;	// C
 	data[1] = 0; // N
-	data[2] = length / 255;	// L2
-	data[3] = length % 255; // L1
+	data[2] = *size / 255;	// L2
+	data[3] = *size % 255; // L1
 
-	for (int i = 0; i < length; i++) {
+	for (int i = 0; i < *size; i++) {
 		data[i+4] = buffer[i];
 	}
 
@@ -58,45 +58,24 @@ int assemble_pic(unsigned char * pic_buffer){
 
 int main(int argc, char** argv)
 {
-    // appL = (applicationLayer *)malloc(sizeof(applicationLayer));
-    
-    // linkL = (linkLayer *)malloc(sizeof(linkLayer));
-    // linkL->timeout = 20;
-    // linkL->sequenceNumber = 0;
 
     char *port;
     char *img;
-    unsigned char * control;
+    unsigned char control[4];
 
-    int fd, res, length;
+    int fd, res, length = 5;
     struct termios oldtio, newtio;
     char buf[255];
 
-    /*
-    1ºcriar estrutuas de dados -> missing some?
-    2ºler os argumentos q lhe vamos passar -> DONE
-    3ºabrir (llopen) -> TO_DO FROM THIS POINT DOWN
-    4º
-    SE FOR TRANSMITTER:
-    -abrir ficheiro
-    -mandar control packet (app)
-    fazer ciclo para criar data packet (app) e fazer llwrite deste
-    -mandar control packet (do fim)
-    SE FOR RECIEVER:
-    fazer ciclo while durante o tempo todo a ler os packets
-
-    */
-
-    // argc = 2 -> programa + porta = receptor
-    // argc = 3 -> programa + porta + path da imagem = emissor
 
     if(argc < 2 || argc > 3){
-       printf("Invalid Usage:\tInvalid number of arguments");
+       printf("Invalid Usage:\tInvalid number of arguments0");
        exit(1);
     }
 
     for(int i = 1; i < argc; i++){
-        if(strcmp(MODEMDEVICE_0, argv[i]) == 0 || strcmp(MODEMDEVICE_1, argv[i]) == 0){
+        if(strcmp(MODEMDEVICE_0, argv[i]) == 0 || strcmp(MODEMDEVICE_1, argv[i]) == 0 || 
+    strcmp(SOCAT_MODEMDEVICE_10, argv[i]) == 0 || strcmp(SOCAT_MODEMDEVICE_11, argv[i]) == 0 ){
             port = argv[i];
         }
         else {
@@ -105,13 +84,14 @@ int main(int argc, char** argv)
 				img = argv[i];
 			} 
             else {
-				printf("Invalid Usage:\tInvalid arguments\n");
+				printf("Invalid Usage:\tInvalid arguments1\n");
 				exit(1);
 			}
 		}
     }
     if(img == NULL){ // Open comunications for receiver
         if((fd = llopen(port, RECEIVER))){
+            printf("after ua received\n");
             unsigned char *msg;
             unsigned char *buffer;
             unsigned char *msg_start;
@@ -141,7 +121,7 @@ int main(int argc, char** argv)
 
                 }
             
-            llclose(*port);
+            llclose(*port, RECEIVER);
 
             int number_frames = sizeof(*msg) / (MAX_SIZE - 6);
             FILE *file_return_final = fopen("return_file.gif", "w");
@@ -171,7 +151,7 @@ int main(int argc, char** argv)
             }
         }
 
-        llclose(fd);
+        llclose(fd, TRANSMITTER);
     } 
     
     if (tcsetattr(fd, TCSANOW, &oldtio) == -1) {

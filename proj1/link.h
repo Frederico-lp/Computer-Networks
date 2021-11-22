@@ -44,7 +44,8 @@ char frame[MAX_SIZE];          /*Trama*/
 
 
 
-void byte_stuffing(unsigned char *packet, unsigned char **stuffed_packet, int length);
+
+unsigned char * byte_stuffing(unsigned char *packet, int length);
 
 unsigned char* byte_destuffing(unsigned char *packet);
 

@@ -1,6 +1,6 @@
 #include "application.h"
 
-applicationLayer *appL;
+//applicationLayer *appL;
 
 int sequence_number = 0;
 
@@ -53,9 +53,9 @@ int create_data_packet(size_t c, unsigned char *data, int data_size, char**packe
 
 int llopen(char *port,int flag) {
     
-    appL->fileDescriptor = iniciate_connection(port, flag);
-    appL->status = flag;
-    return appL->fileDescriptor;
+    // appL->fileDescriptor = iniciate_connection(port, flag);
+    // appL->status = flag;
+    return iniciate_connection(port, flag);
 }
 
 
@@ -70,6 +70,6 @@ unsigned char* llread(int fd){
     return read_i_frame(fd);
 }
 
-int llclose(int fd){
-    return terminate_connection(&fd, appL->status);
+int llclose(int fd, int flag){
+    return terminate_connection(&fd, flag);
 }

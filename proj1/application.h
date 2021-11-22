@@ -12,6 +12,8 @@
 #define BAUDRATE B38400
 #define MODEMDEVICE_0 "/dev/ttyS0"
 #define MODEMDEVICE_1 "/dev/ttyS1"
+#define SOCAT_MODEMDEVICE_11 "/dev/ttyS11"
+#define SOCAT_MODEMDEVICE_10 "/dev/ttyS10"
 #define _POSIX_SOURCE 1 /* POSIX compliant source */
 
 #define FLAG 0x7e
@@ -34,6 +36,6 @@ int llwrite(int fd, char * buffer, int length);
 
 unsigned char* llread(int fd);
 
-int llclose(int fd);
+int llclose(int fd, int flag);
 
 void create_packet();
