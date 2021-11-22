@@ -34,6 +34,7 @@ unsigned char * process_pic(char* path, int* size){
 	for (int i = 0; i < *size; i++) {
 		data[i+4] = buffer[i];
 	}
+    printf("main- total file bytes = %d\n", *size);
 
 	return data;
 }
@@ -61,7 +62,7 @@ int main(int argc, char** argv)
 
     char *port;
     char *img;
-    unsigned char control[4];
+    unsigned char control[100];
 
     int fd, res, length = 5;
     struct termios oldtio, newtio;
@@ -118,12 +119,14 @@ int main(int argc, char** argv)
                 msg_end = msg[i];
                 free(msg[i]);
                 */
-                msg = llread(fd);
-                msg_end = llread(fd);
 
                 }
+                
+                msg = llread(fd);
+                printf("receiver reading last control packet\n");
+                msg_end = llread(fd);
             
-            llclose(*port, RECEIVER);
+            llclose(fd, RECEIVER);
 
             int number_frames = sizeof(*msg) / (MAX_SIZE - 6);
             FILE *file_return_final = fopen("return_file.gif", "w");
@@ -140,17 +143,25 @@ int main(int argc, char** argv)
             printf("Error processing image\n");
             exit(1);
         }
+        printf(" length in main is %d\n", length);
         //CONTROL packet
         control[0] = 2; // C_BEGIN
         control[1] = 0; // T_FILESIZE
         control[2] = 1;
         control[3] = length;
-        printf("1 packet\n");
-        printf("fd = %d\n", fd);
-        if(llwrite(fd, control, 4)){    //escreve control packet
-            printf("2 packet\n");
+        int tempLength = length;
+        int l1 = (length / 255) + 1;
+        int i;
+        for(i = 0; i < l1; i++){
+        control[4+i] =  (tempLength >> 8*(i+1) & 0xff);   //so o ultimo byte do numero
+    }
+        printf("starting transmission of CONTROL packet\n");
+        printf("fd = %d\n", fd);    
+        if(llwrite(fd, control, i + 4)){    //escreve control packet  
+            printf("starting transmission of I packet\n");
             if(llwrite(fd, buffer, length)){
                 control[0] = 3;
+                printf("starting transmission of last CONTROL packet\n");
                 llwrite(fd, control, 4);
             }
         }

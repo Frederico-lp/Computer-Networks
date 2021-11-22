@@ -2,7 +2,7 @@
 
 //applicationLayer *appL;
 
-int sequence_number = 0;
+//int sequence_number;
 
 /*
 int create_control_packet(size_t c, size_t t1, size_t t2, 

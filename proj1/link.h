@@ -47,9 +47,11 @@ char frame[MAX_SIZE];          /*Trama*/
 
 unsigned char * byte_stuffing(unsigned char *packet, int length);
 
-unsigned char* byte_destuffing(unsigned char *packet);
+unsigned char* byte_destuffing(unsigned char *packet, int length);
 
 void sig_handler(int signum);
+
+void change_sequenceNumber();
 
 int su_frame_write(int fd, char a, char c);
 
