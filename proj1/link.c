@@ -189,10 +189,12 @@ int i_frame_write(int fd, char a, int length, unsigned char *data) {
 }
 
 unsigned char* read_i_frame(int fd){
+    unsigned char *temp = NULL;
     int state = START;
     int data_size = 0;
     unsigned char buffer;
-    unsigned char *data_received = (unsigned char*)malloc(data_size);
+    //unsigned char *data_received = (unsigned char*)malloc(data_size);
+    unsigned char data_received[12000];
     int all_data_received = FALSE;
     int data_couter = 0;
     int testCount = 0;
@@ -251,14 +253,15 @@ unsigned char* read_i_frame(int fd){
                     //exit(1);
                     if(buffer == FLAG){     //finished transmitting data
                         printf("received final flag!\n");
-                        data_received = byte_destuffing(data_received, &data_size);  //data size starts in 0
+                        
+                        temp = byte_destuffing(data_received, &data_size);  //data size starts in 0
 
                         unsigned char post_transmission_bcc2 = data_received[0];
                         for(int i = 1; i < data_size - 2; i++){
-                            post_transmission_bcc2 ^= data_received[i];
+                            post_transmission_bcc2 ^= temp[i];
                             //printf("   bcc2: %x   ", data_received[i]);
                         }
-                        unsigned char bcc2 = data_received[data_size-1];
+                        unsigned char bcc2 = temp[data_size-1];
                         //////////////////////////////////////////////////////////
                         //test for retransmission:
                         // if(testCount == 3)
@@ -277,18 +280,19 @@ unsigned char* read_i_frame(int fd){
                         }
                         else{
                             perror("BCC2 dont match in llread\n");
-                            free(data_received);
+                            //free(data_received);
                             data_size = 0;
-                            data_received = malloc(data_size);
+                            //data_received = malloc(data_size);
 
                         }
                     }
                     else{
                         printf(" data size in cicle %d \n", data_size);
                         data_size++;
-                        data_received = (unsigned char*)realloc(data_received, data_size);
-                        printf("size of data received is %ld\n", sizeof(data_received));
+                        //data_received = (unsigned char*)realloc(data_received, data_size);
+                        //printf("size of data received is %ld\n", sizeof(data_received));
                         data_received[data_size - 1] = buffer;
+                        printf("data receive saved %x\n", data_received[data_size-1]);
                         //printf("buffer = %x", buffer);
                     }
                     break;
@@ -307,7 +311,7 @@ unsigned char* read_i_frame(int fd){
 
     // }
     printf("data size is %d\n", data_size);
-    return data_received;
+    return temp;
 }
 
 int iniciate_connection(char *port, int connection)

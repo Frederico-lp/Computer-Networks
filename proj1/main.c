@@ -92,19 +92,18 @@ int main(int argc, char** argv)
 
                 }
                 
-                *msg = llread(fd);
+                msg = llread(fd);
                 printf("receiver reading last control packet\n");
                 msg_end = llread(fd);
             
             llclose(fd, RECEIVER);
 
-            int number_frames = sizeof(*msg) / (MAX_SIZE - 6);
-            printf("size of message if %d\n", sizeof(msg));
+            //int number_frames = sizeof(*msg) / (MAX_SIZE - 6);
             FILE *f = fopen("return_file.gif", "w");
-            // for(int i = 0; i< number_frames; i++){
-            //     fputc(msg[i], file_return_final);
-            // }
-            int written = fwrite(msg, sizeof(char), sizeof(msg), f);
+            for(int i = 4; i< 11037; i++){
+                fputc(msg[i], f);
+            }
+            int written = fwrite(msg, sizeof(unsigned char), sizeof(msg), f);
             if (written == 0) {
                 printf("Error during writing to file !");
             }
