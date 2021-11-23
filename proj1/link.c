@@ -288,13 +288,13 @@ unsigned char* read_i_frame(int fd, int *size_read){
                         }
                     }
                     else{
-                        printf(" data size in cicle %d \n", data_size);
+                        //printf(" data size in cicle %d \n", data_size);
                         data_size++;
 
                         //data_received = (unsigned char*)realloc(data_received, data_size);
                         //printf("size of data received is %ld\n", sizeof(data_received));
                         data_received[data_size - 1] = buffer;
-                        printf("data receive saved %x\n", data_received[data_size-1]);
+                        //printf("data receive saved %x\n", data_received[data_size-1]);
                         //printf("buffer = %x", buffer);
                     }
                     break;
