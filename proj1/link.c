@@ -263,7 +263,7 @@ unsigned char* read_i_frame(int fd){
                         data_size++;
                         data_received = (unsigned char*)realloc(data_received, data_size);
                         data_received[data_size - 1] = buffer;
-                        printf("buffer = %x", buffer);
+                        //printf("buffer = %x", buffer);
                     }
                     break;
             }
