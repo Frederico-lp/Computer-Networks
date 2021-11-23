@@ -2,7 +2,7 @@
 
 
 unsigned char * process_pic(char* path, int* size){
-    FILE *f = fopen(path, "rb");
+    FILE *f = fopen(path, "r");
     fseek(f, 0, SEEK_END);
     *size = ftell(f); //qts bytes tem o ficheiro
     unsigned char *data = (unsigned char*)malloc(*size+4);
@@ -62,7 +62,8 @@ int main(int argc, char** argv)
     if(img == NULL){ // Open comunications for receiver
         if((fd = llopen(port, RECEIVER))){
             printf("after ua received\n");
-            unsigned char *msg;
+            unsigned char *msg = NULL;
+            msg = (unsigned char *)malloc(1000 * 2);
             unsigned char *buffer;
             unsigned char *msg_start;
             unsigned char *msg_end;
@@ -91,14 +92,15 @@ int main(int argc, char** argv)
 
                 }
                 
-                msg = llread(fd);
+                *msg = llread(fd);
                 printf("receiver reading last control packet\n");
                 msg_end = llread(fd);
             
             llclose(fd, RECEIVER);
 
             int number_frames = sizeof(*msg) / (MAX_SIZE - 6);
-            FILE *f = fopen("return_file.gif", "wb");
+            printf("size of message if %d\n", sizeof(msg));
+            FILE *f = fopen("return_file.gif", "w");
             // for(int i = 0; i< number_frames; i++){
             //     fputc(msg[i], file_return_final);
             // }

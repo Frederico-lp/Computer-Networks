@@ -43,13 +43,36 @@ unsigned char * byte_stuffing(unsigned char *packet, int *length){
 
 }
 
+////////////////////////////////////////////////////
+unsigned char * byte_destuffing(unsigned char *packet, int *length){
+    //so do data no i packet
+    unsigned char *destuffed_packet = NULL;
+    destuffed_packet = (unsigned char *)malloc(*length * 2);
+    int j = 0;
+    for (int i = 0; i < *length; i++) {
+        if (packet[i] == ESCAPE_OCTET)
+            destuffed_packet[j] = packet[++i] ^ 0x20;
+        else
+            destuffed_packet[j] = packet[i];
+
+        j++;
+    }
+    *length = j;
+    return destuffed_packet;
+
+}
+
+
+
+//////////////////////////////////////////////////
+/*
 unsigned char* byte_destuffing(unsigned char *packet, int *length){
     //a partir do data do i packet ate ao bcc2(nao inclusive)
     return packet;
     unsigned char * msg = malloc(sizeof(packet) * *length);
     unsigned char * aux_msg = malloc(sizeof(*packet) * *length);
     int j = 0;
-    for(int i = 4; i < *length; i++, j++){  //ignores first 4 bytes because
+    for(int i = 0; i < *length; i++, j++){  //ignores first 4 bytes because
         if(packet[i] != ESCAPE_OCTET){
             aux_msg[j] = packet[i];
         }
@@ -78,6 +101,7 @@ unsigned char* byte_destuffing(unsigned char *packet, int *length){
 
     return aux_msg;
 }
+*/
 
 int su_frame_write(int fd, char a, char c) {
     unsigned char buf[5];
@@ -260,8 +284,10 @@ unsigned char* read_i_frame(int fd){
                         }
                     }
                     else{
+                        printf(" data size in cicle %d \n", data_size);
                         data_size++;
                         data_received = (unsigned char*)realloc(data_received, data_size);
+                        printf("size of data received is %ld\n", sizeof(data_received));
                         data_received[data_size - 1] = buffer;
                         //printf("buffer = %x", buffer);
                     }
@@ -270,10 +296,17 @@ unsigned char* read_i_frame(int fd){
         }
     }
     printf("receiver received packet!\n");
+    unsigned char *final_array = (unsigned char*)malloc(sizeof(data_received));
     if(data_received[0])   //posso fazer isto?
 
         su_frame_write(fd, A_R, C_RR);
     
+
+    // for(int i = 0; i < sizeof(data_received); i++){
+    //     final_array[i] = data_received[i+4];
+
+    // }
+    printf("data size is %d\n", data_size);
     return data_received;
 }
 
