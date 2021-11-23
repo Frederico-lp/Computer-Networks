@@ -34,7 +34,7 @@ int llopen(char *port,int flag);
 
 int llwrite(int fd, char * buffer, int length);
 
-unsigned char* llread(int fd);
+unsigned char* llread(int fd, int *size);
 
 int llclose(int fd, int flag);
 

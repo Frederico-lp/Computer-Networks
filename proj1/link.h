@@ -33,6 +33,8 @@
 
 #define MAX_SIZE 50
 
+extern int size_of_read;
+
 typedef struct linkLayer{
 char port[20];                 /*Dispositivo /dev/ttySx, x = 0, 1*/
 int baudRate;                  /*Velocidade de transmissão*/
@@ -57,7 +59,7 @@ int su_frame_write(int fd, char a, char c);
 
 int i_frame_write(int fd, char a, int length, unsigned char *data);
 
-unsigned char* read_i_frame(int fd);
+unsigned char* read_i_frame(int fd, int *size_read);
 
 int iniciate_connection(char *port, int connection);
 

@@ -1,6 +1,5 @@
 #include "application.h"
 
-
 unsigned char * process_pic(char* path, int* size){
     FILE *f = fopen(path, "r");
     fseek(f, 0, SEEK_END);
@@ -67,9 +66,9 @@ int main(int argc, char** argv)
             unsigned char *buffer;
             unsigned char *msg_start;
             unsigned char *msg_end;
-
             printf("receiver reading first control packet\n");
-            msg_start = llread(fd);
+            int control_size = 0;
+            msg_start = llread(fd, &control_size);
 
             printf("receiver reading first data packet\n");
             if(msg_start[0] == REJ){
@@ -91,16 +90,16 @@ int main(int argc, char** argv)
                 */
 
                 }
-                
-                msg = llread(fd);
+                int size = 0;
+                msg = llread(fd, &size);
                 printf("receiver reading last control packet\n");
-                msg_end = llread(fd);
+                msg_end = llread(fd, &control_size);
             
             llclose(fd, RECEIVER);
-
             //int number_frames = sizeof(*msg) / (MAX_SIZE - 6);
+            printf("SIZE OF READ IS %d\n\n\n", size);
             FILE *f = fopen("return_file.gif", "w");
-            for(int i = 4; i< 11037; i++){
+            for(int i = 4; i< size; i++){
                 fputc(msg[i], f);
             }
             int written = fwrite(msg, sizeof(unsigned char), sizeof(msg), f);

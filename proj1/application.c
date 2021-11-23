@@ -15,8 +15,8 @@ int llwrite(int fd, char *buffer, int length){
     return i_frame_write(fd, A_E, length, buffer);
 }
 
-unsigned char* llread(int fd){
-    return read_i_frame(fd);
+unsigned char* llread(int fd, int *size){
+    return read_i_frame(fd, size);
 }
 
 int llclose(int fd, int flag){

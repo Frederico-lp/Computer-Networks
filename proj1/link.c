@@ -3,6 +3,7 @@
 unsigned int sequenceNumber = 0;   /*Número de sequência da trama: 0, 1*/
 unsigned int timeout = 3;          /*Valor do temporizador: 1 s*/
 unsigned int numTransmissions = 10; /*Número de tentativas em caso de falha*/
+int size_of_read = 0;
 
 int alarmFlag = 0;
 int alarmCount = 0;
@@ -188,7 +189,7 @@ int i_frame_write(int fd, char a, int length, unsigned char *data) {
 
 }
 
-unsigned char* read_i_frame(int fd){
+unsigned char* read_i_frame(int fd, int *size_read){
     unsigned char *temp = NULL;
     int state = START;
     int data_size = 0;
@@ -289,6 +290,7 @@ unsigned char* read_i_frame(int fd){
                     else{
                         printf(" data size in cicle %d \n", data_size);
                         data_size++;
+
                         //data_received = (unsigned char*)realloc(data_received, data_size);
                         //printf("size of data received is %ld\n", sizeof(data_received));
                         data_received[data_size - 1] = buffer;
@@ -299,6 +301,7 @@ unsigned char* read_i_frame(int fd){
             }
         }
     }
+    
     printf("receiver received packet!\n");
     unsigned char *final_array = (unsigned char*)malloc(sizeof(data_received));
     if(data_received[0])   //posso fazer isto?
@@ -306,10 +309,7 @@ unsigned char* read_i_frame(int fd){
         su_frame_write(fd, A_R, C_RR);
     
 
-    // for(int i = 0; i < sizeof(data_received); i++){
-    //     final_array[i] = data_received[i+4];
-
-    // }
+    *size_read = data_size;
     printf("data size is %d\n", data_size);
     return temp;
 }
