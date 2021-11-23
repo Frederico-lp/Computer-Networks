@@ -49,7 +49,7 @@ unsigned char* byte_destuffing(unsigned char *packet, int *length){
     unsigned char * msg = malloc(sizeof(packet) * *length);
     unsigned char * aux_msg = malloc(sizeof(*packet) * *length);
     int j = 0;
-    for(int i = 0; i < *length; i++, j++){
+    for(int i = 4; i < *length; i++, j++){  //ignores first 4 bytes because
         if(packet[i] != ESCAPE_OCTET){
             aux_msg[j] = packet[i];
         }
@@ -127,6 +127,9 @@ int i_frame_write(int fd, char a, int length, unsigned char *data) {
     alarmCount = 0;
     unsigned char buf[5];
     int flag = FALSE;
+    //////////////////////////////////////////
+    fcntl(fd, F_SETFL, O_NONBLOCK);
+    ///////////////////////////////////////
     printf("frame length = %d", frame_length);
     do{
             if( (written_length = write(fd, framed_data, frame_length)) < 0){
@@ -148,7 +151,7 @@ int i_frame_write(int fd, char a, int length, unsigned char *data) {
         }
         while(alarmFlag && alarmCount <   numTransmissions);
 
-        if(alarmCount ==   numTransmissions){
+        if(alarmCount ==  numTransmissions){
             perror("Error sending i packet, too many attempts\n");
             return -1;
         }
@@ -168,7 +171,7 @@ unsigned char* read_i_frame(int fd){
     unsigned char *data_received = (unsigned char*)malloc(data_size);
     int all_data_received = FALSE;
     int data_couter = 0;
-    int test_flag = FALSE;
+    int testCount = 0;
     while(!all_data_received){
         if(read(fd, &buffer, 1) < 0)
             perror("failed to read i frame\n");
@@ -177,17 +180,14 @@ unsigned char* read_i_frame(int fd){
             switch(state){
 
                 case START:
-                    if(test_flag)
-                        exit(-1);
-                    test_flag = TRUE;
-                    printf("buffer: %x state :start\n", buffer);
+                    //printf("buffer: %x state :start\n", buffer);
                     //printf("data counter = %d\n", data_couter);
                     data_couter++;
                     if(buffer == FLAG)
                         state = FLAG_RCV;
                     break;
                 case FLAG_RCV:
-                    printf("buffer: %x state :flag_rcv\n", buffer);
+                    //printf("buffer: %x state :flag_rcv\n", buffer);
                     // printf("data counter = %d\n", data_couter);
                     data_couter++;
                     if(buffer == 0x01 || buffer == 0x03)
@@ -197,7 +197,7 @@ unsigned char* read_i_frame(int fd){
                     else state = START;  
                     break;
                 case A_RCV:
-                    printf("buffer: %x state :a_rcv\n", buffer);
+                    //printf("buffer: %x state :a_rcv\n", buffer);
                     // printf("data counter = %d\n", data_couter);
                     data_couter++;
                     printf("sequenceNumber = %d\n", sequenceNumber);
@@ -209,7 +209,7 @@ unsigned char* read_i_frame(int fd){
                         state = START;
                     break;
                 case C_RCV:
-                    printf("buffer: %x state :c_rcv\n", buffer);
+                    //printf("buffer: %x state :c_rcv\n", buffer);
                     // printf("data counter = %d\n", data_couter);
                     data_couter++;
                     if(buffer == 0x01 ^ sequenceNumber)
@@ -234,10 +234,18 @@ unsigned char* read_i_frame(int fd){
                             post_transmission_bcc2 ^= data_received[i];
                             //printf("   bcc2: %x   ", data_received[i]);
                         }
-
                         unsigned char bcc2 = data_received[data_size-1];
-                        printf(" data length = %d", data_size);
-                        printf("'original' bcc2 = %x, other bcc2 = %x\n", bcc2, post_transmission_bcc2);
+                        //////////////////////////////////////////////////////////
+                        //test for retransmission:
+                        // if(testCount == 3)
+                        //     bcc2 = data_received[data_size-1];
+                        // else {
+                        //     unsigned char bcc2 = 3;
+                        //     testCount++;
+                        // }
+                        ////////////////////////////////////////////////////////
+                        //printf(" data length = %d", data_size);
+                        //printf("'original' bcc2 = %x, other bcc2 = %x\n", bcc2, post_transmission_bcc2);
 
                         if(bcc2 == post_transmission_bcc2){
                             printf("data packet received!\n");

@@ -1,20 +1,6 @@
 #include "application.h"
 
 
-/*
-FALTA:
--control[1] = 0; // N o q e isto
--mandar alguma coisa no llwrite se der timeout?
--corrigir warning
--ver assemble pic e create_control_packet e create_control_packet, eu tinha feito os ultimos
-dois e penso q um deles e parecido com o assemble pic que fizeste ------THIS
--escrever o q se recebe no novo ficheiro? (main) ------THIS DONE
--aquilo do struct termios oldtio, newtio; esta repetido varias vezes, eu ja o tinha posto
-no llopen, é mm necessario estar no main tmb?
--ver estruturas de dados, diz q as estou a criar a mesma varias vezes(parte do ponto 1)
--receiver penso q so esta a receber um packet, no main é preciso criar varios (ver linkL.maxSize) ------THIS
-*/
-
 unsigned char * process_pic(char* path, int* size){
     FILE *f = fopen(path, "rb");
     fseek(f, 0, SEEK_END);
@@ -38,24 +24,7 @@ unsigned char * process_pic(char* path, int* size){
 
 	return data;
 }
-/*
-int assemble_pic(unsigned char * pic_buffer){
-    FILE * pic;
-    pic = fopen("penguin.gif", "wb+");
 
-    int picSize = pic_buffer[2]*255 + pic_buffer[3];
-    unsigned char * aux = malloc(picSize);
-
-    for(int i = 0; i < picSize; i++){
-        aux[i] = pic_buffer[i+4];
-    }
-
-    fwrite(aux, 1, picSize-1, pic);
-    fclose(pic);
-
-    return 0;
-}
-*/
 
 int main(int argc, char** argv)
 {
@@ -129,7 +98,7 @@ int main(int argc, char** argv)
             llclose(fd, RECEIVER);
 
             int number_frames = sizeof(*msg) / (MAX_SIZE - 6);
-            FILE *f = fopen("return_file.gif", "w");
+            FILE *f = fopen("return_file.gif", "wb");
             // for(int i = 0; i< number_frames; i++){
             //     fputc(msg[i], file_return_final);
             // }
