@@ -2,8 +2,10 @@
 
 unsigned char * process_pic(char* path, int* size){
     FILE *f = fopen(path, "r");
-    fseek(f, 0, SEEK_END);
-    *size = ftell(f); //qts bytes tem o ficheiro
+    struct stat st;
+    if (stat(path, &st) == 0)
+        *size = st.st_size;
+    //*size = ftell(f); //qts bytes tem o ficheiro
     unsigned char *data = (unsigned char*)malloc(*size+4);
     unsigned char *buffer = (unsigned char *)malloc(*size);
 
