@@ -5,7 +5,7 @@ struct termios oldtio, newtio;
 int timerfd = 0;
 
 unsigned int sequenceNumber = 0;   /*Número de sequência da trama: 0, 1*/
-unsigned int timeout = 3;          /*Valor do temporizador: 1 s*/
+unsigned int timeout = 10;          /*Valor do temporizador: 1 s*/
 unsigned int numTransmissions = 3; /*Número de tentativas em caso de falha*/
 int size_of_read = 0;
 
@@ -192,7 +192,7 @@ unsigned char* read_i_frame(int fd, int *size_read){
                     //printf("buffer: %x state :a_rcv\n", buffer);
                     // printf("data counter = %d\n", data_couter);
                     data_couter++;
-                    printf("sequenceNumber = %d\n", sequenceNumber);
+                    //printf("sequenceNumber = %d\n", sequenceNumber);
                     if(buffer ==  sequenceNumber)
                         state = C_RCV;
                     else if(buffer == 0x7e)
@@ -231,6 +231,7 @@ unsigned char* read_i_frame(int fd, int *size_read){
                         }
                         else{
                             perror("BCC2 dont match in llread\n");
+                            printf("Will now try to re-send\n");
                             data_size = 0;
                             all_data_received = FALSE;
                             data_couter = 0;
@@ -251,7 +252,7 @@ unsigned char* read_i_frame(int fd, int *size_read){
     unsigned char *final_array = (unsigned char*)malloc(sizeof(data_received));
     if(data_received[0])  
         su_frame_write(fd, A_R, C_RR);
-        
+
     *size_read = data_size;
     printf("data size is %d\n", data_size);
     return temp;
