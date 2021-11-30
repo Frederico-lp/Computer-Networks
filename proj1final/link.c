@@ -115,7 +115,7 @@ int i_frame_write(int fd, char a, int length, unsigned char *data) {
     unsigned char buf[5];
     int flag = FALSE;
     //////////////////////////////////////////
-    //fcntl(fd, F_SETFL, O_NONBLOCK);
+    fcntl(fd, F_SETFL, O_NONBLOCK); //nao esta a fazer nada
     ///////////////////////////////////////
     printf("frame length = %d", frame_length);
     do{
