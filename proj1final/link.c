@@ -1,5 +1,7 @@
 #include "link.h"
 
+struct termios oldtio, newtio;
+
 unsigned int sequenceNumber = 0;   /*Número de sequência da trama: 0, 1*/
 unsigned int timeout = 3;          /*Valor do temporizador: 1 s*/
 unsigned int numTransmissions = 10; /*Número de tentativas em caso de falha*/
@@ -295,7 +297,7 @@ unsigned char* read_i_frame(int fd, int *size_read){
                         //printf("size of data received is %ld\n", sizeof(data_received));
                         data_received[data_size - 1] = buffer;
                         //printf("data receive saved %x\n", data_received[data_size-1]);
-                        //printf("buffer = %x", buffer);
+                        printf("buffer = %x", buffer);
                     }
                     break;
             }
@@ -316,16 +318,15 @@ unsigned char* read_i_frame(int fd, int *size_read){
 
 int iniciate_connection(char *port, int connection)
 {
+
+
     int fd,c, res;
-    struct termios oldtio,newtio;
     char buf[5];
     alarmCount = 0;
     alarmFlag = FALSE;
     int i, sum = 0, speed = 0;
 
-    (void) signal(SIGALRM, sig_handler);    //Register signal handler
-
-
+    /////////////////////////////////////////////////////////
     /*
     Open serial port device for reading and writing and not as controlling tty
     because we don't want to get killed if linenoise sends CTRL-C.
@@ -334,6 +335,7 @@ int iniciate_connection(char *port, int connection)
     fd = open(port, O_RDWR | O_NOCTTY );
     if (fd <0) {perror(port); exit(-1); }
 
+    sleep(1);
     if ( tcgetattr(fd,&oldtio) == -1) { /* save current port settings */
     perror("tcgetattr");
     exit(-1);
@@ -360,13 +362,19 @@ int iniciate_connection(char *port, int connection)
 
 
     tcflush(fd, TCIOFLUSH);
-
+    
+    sleep(1);
     if ( tcsetattr(fd,TCSANOW,&newtio) == -1) {
     perror("tcsetattr");
     exit(-1);
     }
+////////////////////////////////////////////////////////
 
+    (void) signal(SIGALRM, sig_handler);    //Register signal handler
+
+    printf("llopen\n");
     printf("New termios structure set\n");
+    printf("llopen\n");
 
 
     int state = START;
@@ -402,6 +410,7 @@ int iniciate_connection(char *port, int connection)
     }
 
     else if(connection == RECEIVER){
+    printf("entrou no receiver\n");
         while(state != BCC_OK){
             if (read(fd, &buf[state], 1) < 0) { // Receive SET message
                 perror("Failed to read SET message.");
@@ -494,6 +503,16 @@ int terminate_connection(int *fd, int connection)
         printf("invalid type of connection!\n");
         return -1;
     }
+    
+    sleep(1);
+    if (tcsetattr(*fd, TCSANOW, &oldtio) == -1) {
+		perror("tcsetattr");
+		exit(-1);
+	}
+
+	close(*fd);
+
+    fflush(stdout);
 
     return 1;
 
