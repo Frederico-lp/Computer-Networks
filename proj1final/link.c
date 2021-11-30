@@ -2,9 +2,11 @@
 
 struct termios oldtio, newtio;
 
+int timerfd = 0;
+
 unsigned int sequenceNumber = 0;   /*Número de sequência da trama: 0, 1*/
 unsigned int timeout = 3;          /*Valor do temporizador: 1 s*/
-unsigned int numTransmissions = 10; /*Número de tentativas em caso de falha*/
+unsigned int numTransmissions = 3; /*Número de tentativas em caso de falha*/
 int size_of_read = 0;
 
 int alarmFlag = 0;
@@ -14,6 +16,7 @@ void sig_handler(int signum){
  
   alarmFlag = 1;
   alarmCount++;
+  fcntl(timerfd, F_SETFL, O_NONBLOCK);
 }
 
 void change_sequenceNumber(){
@@ -23,7 +26,6 @@ void change_sequenceNumber(){
 }
 
 unsigned char * byte_stuffing(unsigned char *packet, int *length){
-    //so do data no i packet
     unsigned char *stuffed_packet = NULL;
     stuffed_packet = (unsigned char *)malloc( *length * 2);
     int j = 0;
@@ -65,47 +67,6 @@ unsigned char * byte_destuffing(unsigned char *packet, int *length){
 
 }
 
-
-
-//////////////////////////////////////////////////
-/*
-unsigned char* byte_destuffing(unsigned char *packet, int *length){
-    //a partir do data do i packet ate ao bcc2(nao inclusive)
-    return packet;
-    unsigned char * msg = malloc(sizeof(packet) * *length);
-    unsigned char * aux_msg = malloc(sizeof(*packet) * *length);
-    int j = 0;
-    for(int i = 0; i < *length; i++, j++){  //ignores first 4 bytes because
-        if(packet[i] != ESCAPE_OCTET){
-            aux_msg[j] = packet[i];
-        }
-        if(packet[i] == ESCAPE_OCTET){
-            if(packet[i+1] == 0x5e){
-                aux_msg[j] = FLAG;
-                *length--;
-                i++;
-            }
-        }
-        else if(packet[i] == ESCAPE_OCTET){
-            if(packet[i+1] == 0x5d){
-                aux_msg[j] = ESCAPE_OCTET;
-                *length--;
-                i++;
-            }
-        }
-        if(packet[i] == FLAG){
-            break;
-        }
-    }
-
-    // for(int i = 0; i < sizeof(*aux_msg) - 1; i++){ //sizeof(*aux_msg) - 1 because bcc2
-    //     msg[i] = aux_msg[i];
-    // }
-
-    return aux_msg;
-}
-*/
-
 int su_frame_write(int fd, char a, char c) {
     unsigned char buf[5];
 
@@ -119,19 +80,18 @@ int su_frame_write(int fd, char a, char c) {
 }
 
 int i_frame_write(int fd, char a, int length, unsigned char *data) {
+    (void) sinal (SIGALRM, sig_handler);
     //bff2 before stuffing
+    timerfd = fd;
     alarmFlag = FALSE;
     alarmCount = 0;
     unsigned char bcc2 = data[0];
     for(int i = 1; i < length; i++){
         bcc2 ^= data[i];
-        //printf("   bcc2: %x   ", data[i]);
     }
     unsigned char *framed_data = (unsigned char*)malloc(sizeof(unsigned char) * (length + 7));
     //byte stuffing
     unsigned char *stuffed_data = byte_stuffing(data, &length);
-    if(strcmp(data, stuffed_data) == 0)
-        printf("sao iguais\n");
     //put stuffed data into frame
     framed_data[0] = FLAG; 
     framed_data[1] = a;  
@@ -141,7 +101,7 @@ int i_frame_write(int fd, char a, int length, unsigned char *data) {
 
     for(int i = 0; i < length; i++){
         framed_data[j] = stuffed_data[i];        //começa no buf[2]
-        printf("   bcc2: %x   ", stuffed_data[j]);
+        //printf("   bcc2: %x   ", stuffed_data[j]);
         j++;
     }
     framed_data[j+1] = bcc2;
@@ -159,14 +119,17 @@ int i_frame_write(int fd, char a, int length, unsigned char *data) {
     ///////////////////////////////////////
     printf("frame length = %d", frame_length);
     do{
+            fcntl(fd, F_SETFL, 0);
+            alarmFlag = FALSE;
+            alarm(timeout);
             if( (written_length = write(fd, framed_data, frame_length)) < 0){
                 printf("written_length = %d ", written_length);
                 perror("i frame failed\n");
             }
-            alarm( timeout);
             flag = FALSE;
             while(!alarmFlag && state != BCC_OK ){
-                read(fd, &buf[state], 1);
+                if(read(fd, &buf[state], 1) <= 0)
+                    sleep(1);
                 state_machine(buf, &state);
             }
             if(state == BCC_OK){
@@ -176,7 +139,7 @@ int i_frame_write(int fd, char a, int length, unsigned char *data) {
             
 
         }
-        while(alarmFlag && alarmCount <   numTransmissions);
+        while(alarmFlag && (alarmCount <   numTransmissions));
 
         if(alarmCount ==  numTransmissions){
             perror("Error sending i packet, too many attempts\n");
@@ -197,7 +160,7 @@ unsigned char* read_i_frame(int fd, int *size_read){
     int data_size = 0;
     unsigned char buffer;
     //unsigned char *data_received = (unsigned char*)malloc(data_size);
-    unsigned char data_received[12000];
+    unsigned char data_received[100000];
     int all_data_received = FALSE;
     int data_couter = 0;
     int testCount = 0;
@@ -249,11 +212,7 @@ unsigned char* read_i_frame(int fd, int *size_read){
                         state = START;
                     break;
                 case DATA:
-                    //printf("buffer: %x state :data\n",buffer);
-                    // printf("data counter = %d\n", data_couter);
                     data_couter++;
-                    //sleep(1);
-                    //exit(1);
                     if(buffer == FLAG){     //finished transmitting data
                         printf("received final flag!\n");
                         
@@ -265,17 +224,6 @@ unsigned char* read_i_frame(int fd, int *size_read){
                             //printf("   bcc2: %x   ", data_received[i]);
                         }
                         unsigned char bcc2 = temp[data_size-1];
-                        //////////////////////////////////////////////////////////
-                        //test for retransmission:
-                        // if(testCount == 3)
-                        //     bcc2 = data_received[data_size-1];
-                        // else {
-                        //     unsigned char bcc2 = 3;
-                        //     testCount++;
-                        // }
-                        ////////////////////////////////////////////////////////
-                        //printf(" data length = %d", data_size);
-                        //printf("'original' bcc2 = %x, other bcc2 = %x\n", bcc2, post_transmission_bcc2);
 
                         if(bcc2 == post_transmission_bcc2){
                             printf("data packet received!\n");
@@ -283,20 +231,15 @@ unsigned char* read_i_frame(int fd, int *size_read){
                         }
                         else{
                             perror("BCC2 dont match in llread\n");
-                            //free(data_received);
                             data_size = 0;
-                            //data_received = malloc(data_size);
-
+                            all_data_received = FALSE;
+                            data_couter = 0;
+                            state = START;
                         }
                     }
                     else{
-                        //printf(" data size in cicle %d \n", data_size);
                         data_size++;
-
-                        //data_received = (unsigned char*)realloc(data_received, data_size);
-                        //printf("size of data received is %ld\n", sizeof(data_received));
                         data_received[data_size - 1] = buffer;
-                        //printf("data receive saved %x\n", data_received[data_size-1]);
                         printf("buffer = %x", buffer);
                     }
                     break;
@@ -306,11 +249,9 @@ unsigned char* read_i_frame(int fd, int *size_read){
     
     printf("receiver received packet!\n");
     unsigned char *final_array = (unsigned char*)malloc(sizeof(data_received));
-    if(data_received[0])   //posso fazer isto?
-
+    if(data_received[0])  
         su_frame_write(fd, A_R, C_RR);
-    
-
+        
     *size_read = data_size;
     printf("data size is %d\n", data_size);
     return temp;

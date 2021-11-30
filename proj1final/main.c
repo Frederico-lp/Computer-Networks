@@ -68,7 +68,7 @@ int main(int argc, char** argv)
         if((fd = llopen(port, RECEIVER))){
             printf("after ua received\n");
             unsigned char *msg = NULL;
-            msg = (unsigned char *)malloc(1000 * 2);
+            msg = (unsigned char *)malloc(800000);
             unsigned char *buffer;
             unsigned char *msg_start;
             unsigned char *msg_end;
@@ -79,22 +79,6 @@ int main(int argc, char** argv)
             printf("receiver reading first data packet\n");
             if(msg_start[0] == REJ){
                 printf("Received start\n");
-                /*
-                ESTA MAL
-                int reading_data = FALSE;
-                int i = 0;
-                while(!reading_data){
-                    buffer = llread(fd);
-                    strcat(msg, buffer);
-                    if(msg[strlen(msg) - ] == 3){  //campo de controlo
-                        reading_data = TRUE;
-                        printf("Received end\n");
-                    }
-                }
-                msg_end = msg[i];
-                free(msg[i]);
-                */
-
                 }
                 int size = 0;
                 msg = llread(fd, &size);
@@ -108,10 +92,10 @@ int main(int argc, char** argv)
             for(int i = 4; i< size; i++){
                 fputc(msg[i], f);
             }
-            int written = fwrite(msg, sizeof(unsigned char), sizeof(msg), f);
-            if (written == 0) {
-                printf("Error during writing to file !");
-            }
+            // int written = fwrite(msg, sizeof(unsigned char), sizeof(msg), f);
+            // if (written == 0) {
+            //     printf("Error during writing to file !");
+            // }
             fclose(f);
         
         }
