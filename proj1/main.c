@@ -9,6 +9,7 @@ unsigned char * process_pic(char* path, int* size){
     unsigned char *data = (unsigned char*)malloc(*size+4);
     unsigned char *buffer = (unsigned char *)malloc(*size);
 
+
     //fseek(f, 0, SEEK_SET);
     fread(buffer, 1, *size, f);
     fclose(f);
@@ -36,7 +37,6 @@ int main(int argc, char** argv)
     unsigned char control[100];
 
     int fd, res, length = 5;
-    struct termios oldtio, newtio;
     char buf[255];
 
 
@@ -45,30 +45,30 @@ int main(int argc, char** argv)
        exit(1);
     }
 
-    for(int i = 1; i < argc; i++){
-        if(strcmp(MODEMDEVICE_0, argv[i]) == 0 || strcmp(MODEMDEVICE_1, argv[i]) == 0 || 
-    strcmp(SOCAT_MODEMDEVICE_10, argv[i]) == 0 || strcmp(SOCAT_MODEMDEVICE_11, argv[i]) == 0 ){
-            port = argv[i];
+        if(strcmp(MODEMDEVICE_0, argv[1]) == 0 || strcmp(MODEMDEVICE_1, argv[1]) == 0 || 
+    strcmp(SOCAT_MODEMDEVICE_10, argv[1]) == 0 || strcmp(SOCAT_MODEMDEVICE_11, argv[1]) == 0 ){
+            port = argv[1];
         }
+    if(argc == 2)
+        img = NULL;
+    else if(argc == 3){
+	    int accessableImg = access(argv[2], F_OK);
+	    if (accessableImg == 0) {
+		    img = argv[2];
+	    } 
         else {
-			int accessableImg = access(argv[i], F_OK);
-			if (accessableImg == 0) {
-				img = argv[i];
-			} 
-            else {
-				printf("Invalid Usage:\tInvalid arguments1\n");
-				exit(1);
-			}
-		}
+		    printf("Invalid Usage:\tInvalid arguments1\n");
+		    exit(1);
+	    }
     }
-    ////////////////////////////////
-    //img=NULL;
-    /////////////////////////////////
+    
+    //img = NULL;
     if(img == NULL){ // Open comunications for receiver
+    printf("receiver\n");
         if((fd = llopen(port, RECEIVER))){
             printf("after ua received\n");
             unsigned char *msg = NULL;
-            msg = (unsigned char *)malloc(1000 * 2);
+            msg = (unsigned char *)malloc(800000);
             unsigned char *buffer;
             unsigned char *msg_start;
             unsigned char *msg_end;
@@ -79,22 +79,6 @@ int main(int argc, char** argv)
             printf("receiver reading first data packet\n");
             if(msg_start[0] == REJ){
                 printf("Received start\n");
-                /*
-                ESTA MAL
-                int reading_data = FALSE;
-                int i = 0;
-                while(!reading_data){
-                    buffer = llread(fd);
-                    strcat(msg, buffer);
-                    if(msg[strlen(msg) - ] == 3){  //campo de controlo
-                        reading_data = TRUE;
-                        printf("Received end\n");
-                    }
-                }
-                msg_end = msg[i];
-                free(msg[i]);
-                */
-
                 }
                 int size = 0;
                 msg = llread(fd, &size);
@@ -108,15 +92,16 @@ int main(int argc, char** argv)
             for(int i = 4; i< size; i++){
                 fputc(msg[i], f);
             }
-            int written = fwrite(msg, sizeof(unsigned char), sizeof(msg), f);
-            if (written == 0) {
-                printf("Error during writing to file !");
-            }
+            // int written = fwrite(msg, sizeof(unsigned char), sizeof(msg), f);
+            // if (written == 0) {
+            //     printf("Error during writing to file !");
+            // }
             fclose(f);
         
         }
     }
-    else if(fd = llopen(port, TRANSMITTER)){ // Open comunications for transmitter
+    else if(fd = llopen(port, TRANSMITTER)){ 
+        printf("transmitter");
         unsigned char * buffer = process_pic(img, &length);
         if(length <= 5){ // demand at least a byte, the rest is the header
             printf("Error processing image\n");
@@ -148,15 +133,7 @@ int main(int argc, char** argv)
         llclose(fd, TRANSMITTER);
     } 
     
-    sleep(1);
-    if (tcsetattr(fd, TCSANOW, &oldtio) == -1) {
-		perror("tcsetattr");
-		exit(-1);
-	}
-
-	close(fd);
-
-    fflush(stdout);
+    
 
 	return 0;
 }
