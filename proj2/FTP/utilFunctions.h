@@ -8,6 +8,15 @@
 #include <string.h>
 #include <netdb.h>
 #include <stdbool.h>
+#include <fcntl.h>
+
+#define START 0
+#define END 1
+#define FIRST_ANSWER 2
+#define SEARCH_SECOND 3
+#define SECOND_ANSWER 4
+#define SEARCH_THIRD 5
+#define GET_LAST 6
 
 #define h_addr h_addr_list[0]	//The first address in h_addr_list.
 #define FTP_SERVER_PORT 21
@@ -37,4 +46,4 @@ url save_arguments(char *arguments);
 
 int establish_connection(char *ip, int port);
 
-
+char *  getFileName(char* path);

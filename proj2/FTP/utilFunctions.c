@@ -24,7 +24,7 @@ url save_arguments(char *arguments){
 
     //check for password
     if(!strstr(arguments, '@')){
-        strcpy(parsed_url.user, "anonymous");
+        strcpy(parsed_url.password, "anonymous");
     }
     else{
         if(!user){
@@ -73,4 +73,22 @@ int establish_connection(char *ip, int port){
     }
 
     return sockfd;
+}
+
+char *getFileName(char *path) {
+    char * file_name = malloc(50);
+
+    int last_index = 0;
+    for (int i = 0; i < strlen(path); i++) {
+        if (path[i] == '/') {
+            last_index = i+1;
+        }
+    }
+
+    int j = 0;
+    for (int i = last_index; i < strlen(path); i++, j++) {
+        file_name[j] = path[i];
+    }
+
+    return file_name;
 }
