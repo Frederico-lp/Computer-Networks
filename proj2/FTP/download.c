@@ -148,12 +148,20 @@ int main(int argc, char *argv[])
     }
 
     // TO-DO : Send filepath to server
+    //socket returned after pasv command sent to server
+    //off_t file_size = ask_for_file(file_name, socket);
 
-    char * file_name = getFileName(*parsed_url.urlPath);
+    char * file_name = get_file_name(*parsed_url.urlPath);
     int file = open(file_name, O_CREAT | O_WRONLY, 0777);
     
     char file_buf[256];
     int bytes;
+
+
+    //download_file(file, socket, file_size);
+
+
+    //read file from socket
 
     // write the file 
 
@@ -165,7 +173,7 @@ int main(int argc, char *argv[])
 
 
 
-    close(file);
+    //close(file);
 
     //close socket fd
     if (close(sockfd)<0) {

@@ -75,7 +75,7 @@ int establish_connection(char *ip, int port){
     return sockfd;
 }
 
-char *getFileName(char *path) {
+char *get_file_name(char *path) {
     char * file_name = malloc(50);
 
     int last_index = 0;
@@ -91,4 +91,68 @@ char *getFileName(char *path) {
     }
 
     return file_name;
+}
+
+
+off_t ask_for_file(char *file, int socket){
+    int cmdSize = strlen(file) + 5 + 1 + 1;
+    char command[cmdSize];
+    int strSize = strlen(file) + BUFFER_SIZE;
+    char answer[strSize];
+    char *expectedAnswerPrefix = "150 Opening BINARY mode data connection for ";
+    int cmpSize = strlen(expectedAnswerPrefix) + strlen(file) + 1;
+    char expectedAnswer[cmpSize];
+
+    snprintf(command, cmdSize, "RETR %s\n", file);
+
+    //socketWrite(socket, command);
+    write(socket, command, strlen(command));
+
+    //socketRead(socket, answer, strSize);
+    read(socket, answer, strSize);
+
+    snprintf(expectedAnswer, cmpSize, "%s%s", expectedAnswerPrefix, file);
+
+    if (strncmp(answer, expectedAnswer, cmpSize - 1))
+    {
+      fprintf(stderr, "Wrong RETR answer: %s", answer);
+      exit(-1);
+    }
+
+    //falta isto do get file sizw tmb
+    off_t fileSize = getFileSize(answer, strlen(expectedAnswer) + 1);
+    return fileSize;
+}
+
+int download_file(char *file, int socket, off_t file_size){
+    char buf[MAX_LEN];
+    int bytes;
+    float total_bytes = 0;
+
+    // char* filename = strrchr(file, '/');
+
+    // if (filename == NULL)
+    //     filename = file;
+    // else
+    //     filename += 1;
+
+    // FILE* file = fopen(filename, "w");
+    // if (file == NULL) {
+    //     printf("ERROR: Failed to open file.\n");
+    //     exit(1);
+    // }
+
+    printf("Download starting %s\n", file);
+
+    while ((bytes = read(socket, buf, sizeof(buf))) > 0) {
+        bytes = fwrite(buf, 1, bytes, file);
+        total_bytes += bytes;
+    }
+
+    printf("Download finished %s\n", file);
+
+    fclose(file);
+
+    return 0;
+
 }

@@ -46,4 +46,7 @@ url save_arguments(char *arguments);
 
 int establish_connection(char *ip, int port);
 
-char *  getFileName(char* path);
+char *get_file_name(char *path);
+
+off_t ask_for_file(char *file, int socket);
+
