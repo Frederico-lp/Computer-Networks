@@ -1,43 +1,44 @@
 #include "utilFunctions.h"
 
 url save_arguments(char *arguments){
-    //fazer debbuging dos strtok depois
     url parsed_url;
-    if(strncmp(arguments, "ftp://", 6) != 0){
-        perror("Error reading arguments, second argument should start with ftp://\n");
+
+    if(strncmp(arguments, "ftp://", 6)){
+        printf("Error reading arguments, second argument should start with ftp://\n");
         exit(-1);
     }
+
     arguments += 6;
     char *token;
     //check for user
     bool user = false;
-    if(!strstr(arguments, ':')){
+    if(!strstr(arguments, ":")){
         strcpy(parsed_url.user, "anonymous");
     }
     //user exists
     else{
         user = true;
-        token = strtok(arguments, ':');
+        token = strtok(arguments, ":");
         strcpy(parsed_url.user, token);
         arguments += strlen(parsed_url.user) + 1;   //+1 for :
     }
 
     //check for password
-    if(!strstr(arguments, '@')){
+    if(!strstr(arguments, "@")){
         strcpy(parsed_url.password, "anonymous");
     }
     else{
         if(!user){
-            perror("Error, you provided a password without a user\n");
+            printf("Error, you provided a password without a user\n");
             exit(-1);
         }
-        token = strtok(arguments, '@');
-        strcpy(parsed_url.user, token);
+        token = strtok(arguments, "@");
+        strcpy(parsed_url.password, token);
         arguments += strlen(parsed_url.password) + 1;   //+1 for @
     }
 
     //save host
-    token = strtok(arguments, '/');
+    token = strtok(arguments, "/");
     strcpy(parsed_url.host, token);
     arguments += strlen(parsed_url.host) + 1;   //+1 for /
 
@@ -93,11 +94,30 @@ char *get_file_name(char *path) {
     return file_name;
 }
 
+int get_port(char *pasv_answer){
+    //x*256 + y
+    char *temp, *slice[10];
+    int i = 0;
+    while( (temp = strsep(&pasv_answer,",")) != NULL ){
+        slice[i] = temp;
+        printf("%s\n",slice[i]);
+        i++;
+    }
+}
+
+
+int get_file_size(char* response) {
+    char* s = strrchr(response, '(') + 1;
+    int file_size = atoi(strtok(s, " "));
+
+    return file_size;
+}
+
 
 off_t ask_for_file(char *file, int socket){
     int cmdSize = strlen(file) + 5 + 1 + 1;
     char command[cmdSize];
-    int strSize = strlen(file) + BUFFER_SIZE;
+    int strSize = strlen(file) + MAX_LEN;
     char answer[strSize];
     char *expectedAnswerPrefix = "150 Opening BINARY mode data connection for ";
     int cmpSize = strlen(expectedAnswerPrefix) + strlen(file) + 1;
@@ -120,8 +140,8 @@ off_t ask_for_file(char *file, int socket){
     }
 
     //falta isto do get file sizw tmb
-    off_t fileSize = getFileSize(answer, strlen(expectedAnswer) + 1);
-    return fileSize;
+    //off_t fileSize = get_file_size(answer, strlen(expectedAnswer) + 1);
+    return 5;
 }
 
 int download_file(char *file, int socket, off_t file_size){

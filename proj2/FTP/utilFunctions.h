@@ -18,6 +18,7 @@
 #define SEARCH_THIRD 5
 #define GET_LAST 6
 
+#define MAX_LEN 256
 #define h_addr h_addr_list[0]	//The first address in h_addr_list.
 #define FTP_SERVER_PORT 21
 /**
@@ -48,5 +49,12 @@ int establish_connection(char *ip, int port);
 
 char *get_file_name(char *path);
 
+int get_port(char *pasv_answer);
+
 off_t ask_for_file(char *file, int socket);
+
+int get_file_size(char* response);
+
+int download_file(char *file, int socket, off_t file_size);
+
 
