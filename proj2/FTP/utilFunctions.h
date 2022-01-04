@@ -49,12 +49,11 @@ int establish_connection(char *ip, int port);
 
 char *get_file_name(char *path);
 
-int get_port(char *pasv_answer);
+int parse_answer(char *pasv_answer, char *ip);
 
-off_t ask_for_file(char *file, int socket);
+int ask_for_file(char *urlPath, int socket);
 
 int get_file_size(char* response);
 
-int download_file(char *file, int socket, off_t file_size);
-
+off_t download_file(char *urlPath, int data_socket);
 

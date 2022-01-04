@@ -161,32 +161,37 @@ int main(int argc, char *argv[])
             break;
         }
     }
-///////////////////////////////////////////////////////////////////////////////////
 
 
+    char dataIP[50];
+    int dataPort = parse_answer(pasv_answer, dataIP);
+    printf("Port: %d\n", dataPort);
+    printf("IP: %s\n", dataIP);
 
-    printf("out of the cycle\n");
-    printf("pasv is %s\n", pasv_answer);
-    get_port(pasv_answer);
-    return 1;
 
-
+    int data_sockfd = establish_connection(dataIP, dataPort);
 
     // ate aqui esta testado
     /////////////////////////////////////////////////////////////////////////////////
 
-    // TO-DO : Send filepath to server
+
+
+    ask_for_file(parsed_url.urlPath, sockfd);
+
+
+    download_file(parsed_url.urlPath, data_sockfd);
+
+
+
+    // char * file_name = get_file_name(*parsed_url.urlPath);
+    // int file = open(file_name, O_CREAT | O_WRONLY, 0777);
+    
+    // char file_buf[256];
+    // int bytes;
+
     //socket returned after pasv command sent to server
     //off_t file_size = ask_for_file(file_name, socket);
 
-    char * file_name = get_file_name(*parsed_url.urlPath);
-    int file = open(file_name, O_CREAT | O_WRONLY, 0777);
-    
-    char file_buf[256];
-    int bytes;
-
-
-    //download_file(file, socket, file_size);
 
 
     //read file from socket

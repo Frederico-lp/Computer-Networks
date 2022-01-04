@@ -94,15 +94,16 @@ char *get_file_name(char *path) {
     return file_name;
 }
 
-int get_port(char *pasv_answer){
-    //x*256 + y
+int parse_answer(char *pasv_answer, char *ip){
     char *temp, *slice[10];
     int i = 0;
     while( (temp = strsep(&pasv_answer,",")) != NULL ){
         slice[i] = temp;
-        printf("%s\n",slice[i]);
         i++;
     }
+    sprintf(ip, "%s.%s.%s.%s", slice[0], slice[1], slice[2], slice[3]);
+
+    return atoi(slice[4]) * 256 + atoi(slice[5]);
 }
 
 
@@ -114,62 +115,64 @@ int get_file_size(char* response) {
 }
 
 
-off_t ask_for_file(char *file, int socket){
-    int cmdSize = strlen(file) + 5 + 1 + 1;
+int ask_for_file(char *urlPath, int socket){
+    int cmdSize = strlen(urlPath) + 5 + 1 + 1;
     char command[cmdSize];
-    int strSize = strlen(file) + MAX_LEN;
-    char answer[strSize];
-    char *expectedAnswerPrefix = "150 Opening BINARY mode data connection for ";
-    int cmpSize = strlen(expectedAnswerPrefix) + strlen(file) + 1;
-    char expectedAnswer[cmpSize];
 
-    snprintf(command, cmdSize, "RETR %s\n", file);
+    sprintf(command, "retr %s\n", urlPath);
 
-    //socketWrite(socket, command);
-    write(socket, command, strlen(command));
-
-    //socketRead(socket, answer, strSize);
-    read(socket, answer, strSize);
-
-    snprintf(expectedAnswer, cmpSize, "%s%s", expectedAnswerPrefix, file);
-
-    if (strncmp(answer, expectedAnswer, cmpSize - 1))
-    {
-      fprintf(stderr, "Wrong RETR answer: %s", answer);
-      exit(-1);
+    //send the command
+    if(write(socket, command, sizeof(command)) < 0){
+        printf("Error asking socket for file");
+        return -1;
     }
 
-    //falta isto do get file sizw tmb
-    //off_t fileSize = get_file_size(answer, strlen(expectedAnswer) + 1);
-    return 5;
+    char answer[MAX_LEN];
+    int file_size;
+    //read server's answer
+    if(read(socket, answer, MAX_LEN) < 0){
+        printf("Error reading socket answer");
+        return -1;
+    }
+    char answer_code[4];
+    sprintf(answer_code, "%c%c%c", answer[0], answer[1], answer[2]);
+    if(strcmp(answer_code, "150") == 0){
+        printf("%s\n", answer);
+    }
+    else {
+        printf("Error, wrong answer from server after asking for file\n");
+        exit(-1);
+    }
+
+    return 1;
 }
 
-int download_file(char *file, int socket, off_t file_size){
+off_t download_file(char *urlPath, int data_socket){
     char buf[MAX_LEN];
     int bytes;
-    float total_bytes = 0;
+    int size = 0;
 
-    // char* filename = strrchr(file, '/');
+    char *filename = strrchr(urlPath, '/');
 
-    // if (filename == NULL)
-    //     filename = file;
-    // else
-    //     filename += 1;
+    //no ocurrence
+    if (filename == NULL)
+        filename = urlPath;
+    else
+        filename += 1;
 
-    // FILE* file = fopen(filename, "w");
-    // if (file == NULL) {
-    //     printf("ERROR: Failed to open file.\n");
-    //     exit(1);
-    // }
-
-    printf("Download starting %s\n", file);
-
-    while ((bytes = read(socket, buf, sizeof(buf))) > 0) {
-        bytes = fwrite(buf, 1, bytes, file);
-        total_bytes += bytes;
+    FILE* file = fopen(filename, "w");
+    if (file == NULL) {
+        printf("Error opening file to write\n");
+        exit(-1);
     }
 
-    printf("Download finished %s\n", file);
+    while ((bytes = read(data_socket, buf, sizeof(buf))) > 0) {
+        bytes = fwrite(buf, 1, bytes, file);
+        size += bytes;
+    }
+
+    printf("Download of %s finished \n", filename);
+    printf("%d bytes written\n", size);
 
     fclose(file);
 
