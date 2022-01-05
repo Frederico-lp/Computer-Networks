@@ -12,9 +12,9 @@
 
 #define START 0
 #define END 1
-#define FIRST_ANSWER 2
+#define WRITE_PASSWORD 2
 #define SEARCH_SECOND 3
-#define SECOND_ANSWER 4
+#define WRITE_PASV 4
 #define SEARCH_THIRD 5
 #define GET_LAST 6
 

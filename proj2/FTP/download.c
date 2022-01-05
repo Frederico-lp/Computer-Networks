@@ -80,13 +80,13 @@ int main(int argc, char *argv[])
                 if(buf == '3'){
                     read(sockfd,&buf, 1);
                     write(STDOUT_FILENO, &buf, 1);
-                    if(buf == '1') state = FIRST_ANSWER;
+                    if(buf == '1') state = WRITE_PASSWORD;
                     //331 Please specify password.
                 }
             }
             break;
         
-        case FIRST_ANSWER:
+        case WRITE_PASSWORD:
             if(buf == '\n'){
                 // Password writing
                 write(sockfd, msg[1], strlen(msg[1]));
@@ -104,13 +104,13 @@ int main(int argc, char *argv[])
                 if(buf == '3'){
                     read(sockfd,&buf, 1);
                     write(STDOUT_FILENO, &buf, 1);
-                    if(buf == '0') state = SECOND_ANSWER;
+                    if(buf == '0') state = WRITE_PASV;
                     //230 Login successful.
                 }
             }
             break;
 
-        case SECOND_ANSWER:
+        case WRITE_PASV:
             if(buf == '\n'){
                 // Pasv writing
                 write(sockfd, msg[2], strlen(msg[2]));
