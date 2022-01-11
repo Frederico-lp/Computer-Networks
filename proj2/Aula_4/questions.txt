@@ -1,0 +1,14 @@
+What routes are there in the tuxes? What are their meaning?
+
+
+What information does an entry of the forwarding table contain?
+-> It contains information about Destination, Gateway, Genmask, Flags, Metric, Reference, Use and Interface.
+
+What ARP messages, and associated MAC addresses, are observed and why?
+-> The ARP 
+
+What are the IP and MAC addresses associated to ICMP packets and why?
+
+
+What are the paths followed by the packets in the experiments carried out and why?
+
