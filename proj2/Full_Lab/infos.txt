@@ -184,3 +184,7 @@ GE0 -> switch
 GE1 -> internet (5.1) 
 ver pdf stor  
 para configurar o router é preciso mudar de switch console para router console no bastidor
+
+as configuracoes do switch estão no ficheiro: fredepedro
+
+as configuracoes do router estao no ficheiro: 
