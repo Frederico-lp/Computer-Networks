@@ -1,6 +1,6 @@
 (Cisco) How to configure a static route in a commercial router?
 -> Deve-se adicionar uma entrada para a static route na routing table, introduzindo depois os comandos seguintes:
-	- conf t
+	- configure terminal
 	- ip route [ip route][mask][gateway]
 	- exit
 
@@ -8,7 +8,7 @@
 -> 
 
 (Cisco) What does NAT do?
--> NAT significa Network Address Translation e mapeia vários endereços locais privados para um público, o que permite conservar os IP's e oferece melhor segurança à rede.
+-> NAT significa Network Address Translation e mapeia vários endereços locais privados para um público, o que permite conservar os IP's e dá melhor segurança à rede.
 
 (DNS) How to configure the DNS service at an host?
 -> Para configurar o serviço DNS temos de modificar o ficheiro resolv.conf, adicionando o Domain Name e o seu endereço IP do "nameserver".

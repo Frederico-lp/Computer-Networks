@@ -2,13 +2,15 @@ What routes are there in the tuxes? What are their meaning?
 
 
 What information does an entry of the forwarding table contain?
--> It contains information about Destination, Gateway, Genmask, Flags, Metric, Reference, Use and Interface.
+-> Contém a informação acerca do Destino, Gateway, Genmask, Flags, Metric, Referência, Uso e Interface.
 
 What ARP messages, and associated MAC addresses, are observed and why?
--> The ARP 
+-> As mensagens ARP observadas são as que associam um endereço MAC a um IP quando damos ping a uma determinada interface.
 
 What are the IP and MAC addresses associated to ICMP packets and why?
+-> A resposta à pergunta é de natureza igual à pergunta feita na experiência 3, sendo então os mesmos que os da origem/destino dos tux. 
+Isso significa que um pacote ICMP terá um IP/MAC de origem igual ao IP/MAC de origem do tux, verificando-se a mesma relação para o destino (ICMP IP/MAC destino será igual ao IP/MAC destino do tux).
 
 
 What are the paths followed by the packets in the experiments carried out and why?
-
+-> Os pacotes seguirão os caminhos especificados na routing table se eles existirem. Caso contrário seguirão o caminho default.

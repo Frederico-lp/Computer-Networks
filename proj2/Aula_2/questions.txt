@@ -1,0 +1,9 @@
+How to configure vlan50?
+-> É necessário correr os seguintes comandos no GTKTerm:
+    - enable
+    - configure terminal
+    - vlan 50
+    - end
+
+How many broadcast domains are there? How can you conclude it from the logs?
+-> O número de domínios de broadcast será igual ao número de vlans, sendo neste caso 2, dado termos feito a configuração da vlan50 e da vlan51.

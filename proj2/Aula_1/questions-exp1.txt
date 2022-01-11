@@ -8,7 +8,7 @@ What packets does the ping command generate?
 -> The ping command generates ARP and ICMP packets.
 
 What are the MAC and IP addresses of the ping packets?
--> 
+-> 172.16.50.254 for IP and 00:21:5a:c3:78:70 for MAC.
 
 How to determine if a receiving Ethernet frame is ARP, IP or ICMP?
 -> On Wireshark, by analising the "Type" parameter in the Ethernet tree, we can check wheter the frame is ARP or IP (0x806 or 0x800 respectively). If it is an IP one, we check the "Protocol" parameter in the Internet Protocol tree and see if it's an ICMP frame. 

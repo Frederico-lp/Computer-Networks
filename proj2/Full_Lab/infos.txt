@@ -1,0 +1,180 @@
+- meter as questões da exp1 em pt
+- Falta responder a uma pergunta na exp3.
+- Falta responder a uma pergunta da exp4
+
+-------------------------------------------------------------------------------------------------------------------------------
+
+EXP1:
+
+Y = bench number = 5
+
+1 passo - 
+
+EXP2:
+
+
+EXP4:
+
+1 passo - ligar tux54/eth1 ao switch (2 a partir de cima no bastidor) à vlan51.
+
+-------------
+
+Parte do Linux Router
+
+Passo 1 e 2: Criar vlan50 e vlan51
+    - verificar que o tux53 está ligado ao switch
+    - fazer log no switch
+    - configure terminal
+    - vlan 50
+    - end
+    - show vlan id 50
+    (repetir para vlan51)
+
+    vlan50 vai estar na porta 14
+    vlan51 vai estar na porta 15
+
+    configure terminal
+    interface fastethernet 0/14
+    switchport mode access
+    switchport access vlan 50
+    end
+    show running-config interface fastethernet 0/14
+    show interfaces fastethernet 0/14 switchport
+
+    (repetir com 0/15 e vlan 51)
+
+    verificar portas no switch: show vlan brief
+
+
+
+Passo 3: configurar tux54 ip 172.16.51.253/24
+    nota: configurar eth1 e eth0. nao esquecer
+    no terminal linux: 
+        - ifconfig eth1 172.16.51.253/24
+
+    configurar também tux52 e tux53:
+        - 
+
+
+Passo 4:
+    a) enable ip forwarding
+        - echo 1 > /proc/sys/net/ipv4/ip_forward
+    
+    b) disable icmp cho ignore broadcast
+        - echo 0 > /proc/sys/net/ipv4/icmp_echo_ignore_broadcasts
+
+
+
+Passo 5: MAC e IP do tux54 para eht0 e eth1
+    - eth0 
+        - IP: 172.16.50.254
+        - MAC: 00:21:5a:c3:78:70
+    - eth1
+        - IP: 172.16.51.253
+        - MAC: 00:c0:df:08:d5:b0
+
+
+
+Passo 6: Configurar as routes do tux53 e tux52 para eles chegarem um ao outro
+    - tux53
+        - ip route add 172.16.51.0/24 via 172.16.50.254 
+    
+    - tux52
+        - # ip route add 172.16.50.0/24 via 172.16.51.253 
+
+
+
+Passo 7: Observar as routes disponíveis nos tuxes
+    - tux54
+
+    - tux53
+
+    - tux52
+
+
+
+Passo 8: Começar captura no tux53
+
+Passo 9: A partir do tux53, dar ping nas interfaces seguiuntes e verificar conectividade
+    - 172.16.50.254
+
+    - 172.16.51.253
+
+    - 172.16.51.1 
+
+
+
+Passo 10: Parar a captura e guardar os logs
+
+Passo 11: Start a capture in tuxy4 on both interfaces (in Wireshark select with Ctrl+Click the connections to listen to).
+
+Passo 12: Clean the ARP tables in the 3 tuxes.
+
+Passo 13: In tuxy3, ping tuxy2 for a few seconds.
+
+Passo 14: Stop the capture in tuxy4 and save logs.
+
+Passo 15: 
+    In Wireshark for the last capture, view the packets from each interface using, in the display filter, the test frame.interface_id == 0. 
+    Replace 0 with the different numbers for the interfaces. 
+    You can check which are available seeing in the Frame/interface id on a selected packet.
+
+
+-------------------
+
+Parte do CISCO Router
+
+Start: 
+    Passo 1: Verify that the GE0 interface of the Cisco Router is connected to the Lab Router.
+    Passo 2: Verify that the GE1 interface of the Cisco Router is connected to the Switch.
+    Passo 3: Configure the Switch's port from 2 to be on the correct VLAN.
+    Passo 4: Verify the VLANs on the switch.
+
+
+Using the configuration file for the Cisco Router from Exp3
+
+    Passo 1: Modify the configuration file, for IP and forwarding so that:
+        a - the name of the router reflects your Y.
+
+        b - the IP addresses for the interfaces are as indicated in the figure above.
+
+        c - the route to the network 172.16.50.0/24 goes through tuxy4 (172.16.51.253).
+
+        d - The default gateway (to 0.0.0.0) is as in the figure (through 172.16.1.254)
+
+    Passo 2: Modify the configuration file, for NAT so that:
+        a - The nat pool ovrld uses the IP address 172.16.1.59.
+            a.1 - Verify that the interface for this IP address is configured as outside.
+
+        b - Verify that the interface for the 172.16.51.254 IP address is configured as inside.
+
+        c- The access-list 1 permit has the networks 172.16.50.0/24 and 172.16.51.0/24 (in the access list command the mask is 0.0.0.7, which is already correct on the file)
+
+    Passo 3: Configuring the Router
+        a - Access the console for configuring the router through the serial port.
+            a.1 - Check to see if a tux is already connected to the Router's serial port. If not connect the serial port of the router to one of the tuxes serial port (see the NetLab Network if needed). 
+        
+        b - Enter config mode (see below)
+        
+        c - Copy-paste the file to the console.
+        
+        d - Do show running-config to check the running configuration
+        
+        e - Copy the running-config to the startup-config.
+
+    Passo 4: Checking connectivity
+
+        a - Do a ping from the Cisco Router to all tuxes.
+        b - Do a ping from the Cisco Router to 172.16.1.254.
+        c - Do a ping from the Cisco Router to 104.17.113.188 (in the Internet).
+
+    Passo 5: Configure tuxy2 and tuxy4
+
+        a - Set in tuxy2 and tuxy4 the default gateway to the Cisco Router (172.16.50.254)
+            In tuxy2 and tuxy4: # ip route add default via 172.16.50.254 
+            or # route add default gw 172.16.50.254 
+
+        b - Do a ping from tuxy3 to 172.16.1.254.
+
+        c - Do a ping from tuxy3 to 104.17.113.188 (in the Internet).
+    
