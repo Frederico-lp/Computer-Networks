@@ -31,7 +31,7 @@ Passo 1 e 2: Criar vlan50 e vlan51
     (repetir para vlan51)
 
     vlan50 vai estar na porta 14
-    vlan51 vai estar na porta 15
+    vlan51 vai estar na porta 15 e 21
 
     configure terminal
     interface fastethernet 0/14
@@ -134,7 +134,7 @@ Start:
 Using the configuration file for the Cisco Router from Exp3
 
     Passo 1: Modify the configuration file, for IP and forwarding so that:
-        a - the name of the router reflects your Y.
+        a - the name of the router reflects your Y (5).
 
         b - the IP addresses for the interfaces are as indicated in the figure above.
 
@@ -178,3 +178,9 @@ Using the configuration file for the Cisco Router from Exp3
 
         c - Do a ping from tuxy3 to 104.17.113.188 (in the Internet).
     
+
+ligaçoes do router no bastidor
+GE0 -> switch
+GE1 -> internet (5.1) 
+ver pdf stor  
+para configurar o router é preciso mudar de switch console para router console no bastidor

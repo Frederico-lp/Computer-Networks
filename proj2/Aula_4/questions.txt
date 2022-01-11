@@ -14,3 +14,19 @@ Isso significa que um pacote ICMP terá um IP/MAC de origem igual ao IP/MAC de o
 
 What are the paths followed by the packets in the experiments carried out and why?
 -> Os pacotes seguirão os caminhos especificados na routing table se eles existirem. Caso contrário seguirão o caminho default.
+
+
+tux53
+    dest                gw              Genmask
+    172.16.50.0         0.0.0.0         255.255.255.0
+    172.16.51.0         172.16.50.254   255.255.255.0
+
+tux54
+    dest                gw              Genmask
+    172.16.50.0         0.0.0.0         255.255.255.0
+    172.16.51.0         0.0.0.0         255.255.255.0
+
+tux53
+    dest                gw              Genmask
+    172.16.50.0         172.16.51.253   255.255.255.0
+    172.16.51.0         0.0.0.0         255.255.255.0
