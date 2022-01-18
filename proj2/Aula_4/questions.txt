@@ -1,5 +1,25 @@
 What routes are there in the tuxes? What are their meaning?
+-> tux52:
+    dest                gw              Genmask
+    0.0.0.0             172.16.51.254   0.0.0.0
+    172.16.51.0         0.0.0.0         255.255.255.0
+    172.16.50.0         172.16.50.253   255.255.255.0
 
+    tux53:
+    dest                gw              Genmask
+    0.0.0.0             172.16.50.254   0.0.0.0
+    172.16.50.0         0.0.0.0         255.255.255.0
+    172.16.51.0         172.16.50.254   255.255.255.0
+
+    tux54:
+    dest                gw              Genmask
+    0.0.0.0             172.16.51.254   0.0.0.0
+    172.16.50.0         0.0.0.0         255.255.255.0
+    172.16.51.0         0.0.0.0         255.255.255.0
+
+-> Para o tux52 temos a a default que usa a gateway 172.16.51.254, e duas rotas, para as vlan51 (172.16.51.0) e vlan50 (172.16.50.0), usando a gateway 172.16.50.253 para a vlan50. 
+-> Para o tux53 temos a a default que usa a gateway 172.16.50.254, e duas rotas, para as vlan51 (172.16.51.0) e vlan50 (172.16.50.0), usando a gateway 172.16.50.255 para a vlan51.
+-> Para o tux54 temos a a default que usa a gateway 172.16.51.254, e duas rotas, para as vlan51 (172.16.51.0) e vlan50 (172.16.50.0).
 
 What information does an entry of the forwarding table contain?
 -> Contém a informação acerca do Destino, Gateway, Genmask, Flags, Metric, Referência, Uso e Interface.
@@ -14,19 +34,3 @@ Isso significa que um pacote ICMP terá um IP/MAC de origem igual ao IP/MAC de o
 
 What are the paths followed by the packets in the experiments carried out and why?
 -> Os pacotes seguirão os caminhos especificados na routing table se eles existirem. Caso contrário seguirão o caminho default.
-
-
-tux53
-    dest                gw              Genmask
-    172.16.50.0         0.0.0.0         255.255.255.0
-    172.16.51.0         172.16.50.254   255.255.255.0
-
-tux54
-    dest                gw              Genmask
-    172.16.50.0         0.0.0.0         255.255.255.0
-    172.16.51.0         0.0.0.0         255.255.255.0
-
-tux53
-    dest                gw              Genmask
-    172.16.50.0         172.16.51.253   255.255.255.0
-    172.16.51.0         0.0.0.0         255.255.255.0

@@ -1,20 +1,20 @@
 What are the ARP packets and what are they used for?
--> The Address Resolution Protocol packets are a type of message sent in order to obtain the MAC address to a given IP address.
+-> Os pacotes ARP (Address Resolution Protocol) são um tipo de mensagem enviada para obter o endereço MAC de um determinado endereço IP.
 
 What are the MAC and IP addresses of the ARP packets and why?
--> There are 2 ARP packets, request and reply. The request contains it's own IPv4 and MAC addresses and it will "ask" who as a certain IPv4. The reply will then fill the missing MAC address associating it with it's own IP.
+-> Existem 2 pacotes ARP, request e reply. O request contém os seus próprios endereços IP e MAC e "pergunta" quem tem um certo IP. O reply responderá com o endereço MAC em falta do seu próprio IP.
 
 What packets does the ping command generate?
--> The ping command generates ARP and ICMP packets.
+-> O ping gera pacotes ARP e ICMP.
 
 What are the MAC and IP addresses of the ping packets?
--> 172.16.50.254 for IP and 00:21:5a:c3:78:70 for MAC.
+-> 172.16.50.254 para IP e 00:21:5a:c3:78:70 para MAC.
 
 How to determine if a receiving Ethernet frame is ARP, IP or ICMP?
--> On Wireshark, by analising the "Type" parameter in the Ethernet tree, we can check wheter the frame is ARP or IP (0x806 or 0x800 respectively). If it is an IP one, we check the "Protocol" parameter in the Internet Protocol tree and see if it's an ICMP frame. 
+-> No Wireshark, ao analisar o parâmetro "Type" podemos verificar se a frame é ARP ou IP. No caso de ser IP, podemos verificar o parâmetro "Protocol" a fim de ver se é uma frame ICMP.
 
 How to determine the lenght of a receiving frame?
--> It can be seen on the "Lenght" column in Wireshark or on the "Frame Lenght" field in the details of a frame.
+-> Pode ser determinado ao analisar a coluna "Lenght" no Wireshark ou na opção "Frame Lenght" nos detalhes da frame em questão.
 
 What is the loopback interface and why is it important?
--> The loopback interface is used to identify the device and as the loopback addresses never change, it's the best way to do it. It is also important since any traffic that a program sends on the looopback network is addressed to the same computer.
+-> A interface loopback é usada para identificar a máquina. É importante dado que qualquer tráfico que um programa envie para a loopback network é endereçado para o próprio computador. 

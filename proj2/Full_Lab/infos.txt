@@ -66,12 +66,24 @@ Passo 4:
 
 
 Passo 5: MAC e IP do tux54 para eht0 e eth1
-    - eth0 
-        - IP: 172.16.50.254
-        - MAC: 00:21:5a:c3:78:70
-    - eth1
-        - IP: 172.16.51.253
-        - MAC: 00:c0:df:08:d5:b0
+
+    tux54:
+        - eth0 
+            - IP: 172.16.50.254
+            - MAC: 00:21:5a:c3:78:70
+        - eth1
+            - IP: 172.16.51.253
+            - MAC: 00:c0:df:08:d5:b0
+
+    tux53:
+        - eht0
+
+        - eth1
+
+    tux52:
+        - eth0
+        
+        - eth1
 
 
 
