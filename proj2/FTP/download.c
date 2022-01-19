@@ -171,9 +171,6 @@ int main(int argc, char *argv[])
 
     int data_sockfd = establish_connection(dataIP, dataPort);
 
-    // ate aqui esta testado
-    /////////////////////////////////////////////////////////////////////////////////
-
 
 
     ask_for_file(parsed_url.urlPath, sockfd);
@@ -181,32 +178,6 @@ int main(int argc, char *argv[])
 
     download_file(parsed_url.urlPath, data_sockfd);
 
-
-
-    // char * file_name = get_file_name(*parsed_url.urlPath);
-    // int file = open(file_name, O_CREAT | O_WRONLY, 0777);
-    
-    // char file_buf[256];
-    // int bytes;
-
-    //socket returned after pasv command sent to server
-    //off_t file_size = ask_for_file(file_name, socket);
-
-
-
-    //read file from socket
-
-    // write the file 
-
-    //The FTP protocol typically uses port 21 as its main means of communication
-    //An FTP server will listen for client connections on port 21
-
-    /*send a string to the server*/
-
-
-
-
-    //close(file);
 
     //close socket fd
     if (close(sockfd)<0) {
