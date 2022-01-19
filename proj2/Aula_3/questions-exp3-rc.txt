@@ -1,14 +1,14 @@
 (Cisco) How to configure a static route in a commercial router?
 -> Deve-se adicionar uma entrada para a static route na routing table, introduzindo depois os comandos seguintes:
-	- conf t
+	- configure terminal
 	- ip route [ip route][mask][gateway]
 	- exit
 
 (Cisco) How to configure NAT in a commercial router?
--> 
+-> Para configurar o NAT primeiramente definimos o interface inside/outside. De seguida define-se a pool e associa-se a uma access list que permite um intervalo defenido de endereços IP. 
 
 (Cisco) What does NAT do?
--> NAT significa Network Address Translation e mapeia vários endereços locais privados para um público, o que permite conservar os IP's e oferece melhor segurança à rede.
+-> NAT significa Network Address Translation e mapeia vários endereços locais privados para um público, o que permite conservar os IP's e dá melhor segurança à rede.
 
 (DNS) How to configure the DNS service at an host?
 -> Para configurar o serviço DNS temos de modificar o ficheiro resolv.conf, adicionando o Domain Name e o seu endereço IP do "nameserver".
@@ -24,14 +24,13 @@
 
 (Linux) What routes are there in your machine? What are their meaning?
 -> São as seguintes:
-	- 
-	- 
-	- 
 
-Kernel IP routing table
-Destination     Gateway         Genmask         Flags Metric Ref    Use Iface
-0.0.0.0         192.168.31.1    0.0.0.0         UG    600    0        0 wlo1
-169.254.0.0     0.0.0.0         255.255.0.0     U     1000   0        0 wlo1
-172.17.0.0      0.0.0.0         255.255.0.0     U     0      0        0 docker0
-172.18.0.0      0.0.0.0         255.255.0.0     U     0      0        0 br-07fc889629ca
-192.168.31.0    0.0.0.0         255.255.255.0   U     600    0        0 wlo1
+	Destination     Gateway         Genmask         Flags Metric Ref    Use Iface
+	0.0.0.0         192.168.31.1    0.0.0.0         UG    600    0        0 wlo1
+	169.254.0.0     0.0.0.0         255.255.0.0     U     1000   0        0 wlo1
+	172.17.0.0      0.0.0.0         255.255.0.0     U     0      0        0 docker0
+	172.18.0.0      0.0.0.0         255.255.0.0     U     0      0        0 br-07fc889629ca
+	192.168.31.0    0.0.0.0         255.255.255.0   U     600    0        0 wlo1
+
+-> O default usa a gateway 192.168.31.1. Na interface wlo1 temos duas rotas para além da default, sem gateway, sendo elas
+	169.254.0.0 e 192.168.31.0. As interfaces docker0 e br-07fc889629ca têm uma rota cada uma, sendo elas 172.17.0.0 e 172.18.0.0 respetivamente.
